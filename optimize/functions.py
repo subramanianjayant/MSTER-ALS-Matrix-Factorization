@@ -16,7 +16,7 @@ def MSTER(A, k):
     return ratio, vertices
 
 def loss(M, A, B, rA, rB, lambda_):
-    return np.linalg.norm(M-A*B, ord = 'fro')**2 - lambda_*(rA)#+rB)
+    return np.linalg.norm(M-A*B, ord = 'fro')**2 - lambda_*(rA+rB)
 
 def grad(A, vert):
     mat = np.mat(np.zeros((A.shape)))

@@ -21,9 +21,9 @@ class MFConfig:
         self.A = np.mat(np.random.rand(self.n,self.d)) #initializations
         self.B = np.mat(np.random.rand(self.d,self.m))
 
-        self.lr = 0.01 #learning rate
-        self.lambda_ = 5 #regularization for MSTER term in loss
-        self.num_epochs = 200 #number of epochs for gradient descent
+        self.lr = 0.001 #learning rate
+        self.lambda_ = 10 #regularization for MSTER term in loss
+        self.num_epochs = 100 #number of epochs for gradient descent
 
     def dump(self):
         return self.M, self.A, self.B, self.k_A, self.k_B, self.lr, self.lambda_, self.num_epochs

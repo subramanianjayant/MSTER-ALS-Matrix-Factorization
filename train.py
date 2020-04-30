@@ -18,14 +18,15 @@ def train():
     loss_prev = loss(M,A,B,ratio_A, ratio_B, lambda_)
     for epoch in range(num_epochs):
         if (epoch%10)<5:
-            A = A + lr*((M-A*B)*B.T - lambda_*grad(A, vertices_A))
+            A = A - lr*(-(M-A*B)*B.T - lambda_*grad(A, vertices_A))
         else:
-            B = B + lr*(A.T*(M-A*B) )# - lambda_*grad(B.T, vertices_B).T)
+            B = B - lr*(-A.T*(M-A*B) - lambda_*grad(B.T, vertices_B).T)
 
         ratio_A, vertices_A = MSTER(A, k_A)
         ratio_B, vertices_B = MSTER(B.T, k_B)
         loss_ = loss(M,A,B,ratio_A, ratio_B, lambda_)
-        print("epoch {0} --- \t loss: {1}".format(epoch+1, loss_))
+        print("epoch {0} --- \t loss: {1} \t MSTER: {2}".format(epoch+1,
+                loss_, ratio_A))
 
         if loss_<loss_prev:
             A_best = A.copy()
@@ -35,11 +36,11 @@ def train():
     return A_best,B_best #returns best model in terms of loss
 
 if __name__ == '__main__':
-    Ahat, Bhat = train()
+    A_best, B_best = train()
     plt.figure(1)
-    plt.scatter([Ahat[:,0]], [Ahat[:,1]], color='blue')
+    plt.scatter([A_best[:,0]], [A_best[:,1]], color='blue')
     #plt.figure(2)
-    plt.scatter([Bhat[0]], [Bhat[1]], color='orange')
+    plt.scatter([B_best[0]], [B_best[1]], color='orange')
     plt.title('Data in Latent Space')
     plt.legend(['A data','B data'])
     plt.show()
