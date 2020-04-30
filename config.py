@@ -1,7 +1,7 @@
 import numpy as np
 
 class MFConfig:
-    def __init__(self, M = 'rand', d=2, n=100, m=50):
+    def __init__(self, M = 'rand', d=2, n=10, m=100):
 
         self.d = d #latent space dimensionality
 
@@ -22,8 +22,14 @@ class MFConfig:
         self.B = np.mat(np.random.rand(self.d,self.m))
 
         self.lr = 0.001 #learning rate
-        self.lambda_ = 10 #regularization for MSTER term in loss
+        self.lr_decay = 1e-6 #learning rate decay
+
+        self.lambda_ = 7 #regularization for MSTER term in loss
+        self.lambda_decay = 0. #decay for lambda
+
         self.num_epochs = 100 #number of epochs for gradient descent
 
     def dump(self):
-        return self.M, self.A, self.B, self.k_A, self.k_B, self.lr, self.lambda_, self.num_epochs
+        return (self.M, self.A, self.B, self.k_A, self.k_B, self.lr,
+                    self.lr_decay, self.lambda_, self.lambda_decay,
+                    self.num_epochs)
