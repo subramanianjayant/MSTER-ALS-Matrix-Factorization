@@ -26,7 +26,7 @@ def grad(A, vert):
                                 2*(A[vert[0,0],j]-A[vert[1,1],j])*(np.sum(np.square(A[vert[0,0],:]-A[vert[0,1],:])))) /
                                 ((np.sum(np.square(A[vert[0,0],:]-A[vert[1,1],:])))**2))
             mat[vert[0,1],j] = -2*(A[vert[0,0],j]-A[vert[0,1],j])/(np.sum(np.square(A[vert[0,0],:]-A[vert[1,1],:])))
-            mat[vert[1,1],j] = (2*(np.sum(np.square(A[vert[0,0],:]-A[vert[0,1],:])))*(A[vert[0,0],j]-A[vert[1,1],j]) / 
+            mat[vert[1,1],j] = (2*(np.sum(np.square(A[vert[0,0],:]-A[vert[0,1],:])))*(A[vert[0,0],j]-A[vert[1,1],j]) /
                                 ((np.sum(np.square(A[vert[0,0],:]-A[vert[1,1],:])))**2))
 
     elif vert[0,0]==vert[1,1]:
