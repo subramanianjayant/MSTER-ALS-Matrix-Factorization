@@ -2,30 +2,29 @@ import numpy as np
 from sklearn.metrics import pairwise
 import networkx as nx
 from matplotlib import pyplot as plt
-from optimize.functions import MSTER, loss, grad
+from optimize.functions import MSTER, loss, grad, H
 from config import MFConfig
 
-(M, A, B, k_A, k_B, lr, lr_decay, lambda_, lambda_decay, num_epochs) = MFConfig().dump()
+(M, A, B, k_A, k_B, lr, lr_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs) = MFConfig().dump()
 
 def train():
-    global M, A, B, k_A, k_B, lr, lr_decay, lambda_, lambda_decay, num_epochs
-
+    global M, A, B, k_A, k_B, lr, lr_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs
     A_best = 0
     B_best = 0
 
     ratio_A, vertices_A = MSTER(A, k_A)
     ratio_B, vertices_B = MSTER(B.T, k_B)
-    loss_best = loss(M,A,B,ratio_A, ratio_B, lambda_)
+    loss_best = loss(M,A,B,ratio_A, ratio_B, lambda_, eta)
     for epoch in range(num_epochs):
         best = ''
         if (epoch%10)<5:
-            A = A - lr*(-(M-A*B)*B.T - lambda_*grad(A, vertices_A))
+            A = A - lr*(-(M-A*B)*B.T - lambda_*grad(A, vertices_A) - eta*(2*H(M.shape[0]).T*H(M.shape[0])*A))
         else:
-            B = B - lr*(-A.T*(M-A*B) - lambda_*grad(B.T, vertices_B).T)
+            B = B - lr*(-A.T*(M-A*B) )# - lambda_*grad(B.T, vertices_B).T - eta*(2*B*H(M.shape[1]).T*H(M.shape[1])))
 
         ratio_A, vertices_A = MSTER(A, k_A)
         ratio_B, vertices_B = MSTER(B.T, k_B)
-        loss_ = loss(M,A,B,ratio_A, ratio_B, lambda_)
+        loss_ = loss(M,A,B,ratio_A, ratio_B, lambda_, eta)
 
         if loss_<loss_best:
             A_best = A.copy()
@@ -35,9 +34,10 @@ def train():
 
         lr -= lr_decay
         lambda_ -= lambda_decay
+        eta -= eta_decay
 
-        print("epoch {0} --- \t loss: {1} \t total MSTER: {2}\t{3}".format(epoch,
-                loss_, ratio_A+ratio_B, best))
+        print("epoch {0} --- \t loss: {1} \t norm contribution: {2} \t {3}".format(epoch,
+                loss_, np.linalg.norm(M-A*B, ord = 'fro')**2, best))
 
     return A_best,B_best #returns best model in terms of loss
 
