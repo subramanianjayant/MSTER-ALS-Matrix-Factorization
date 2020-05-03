@@ -1,7 +1,7 @@
 import numpy as np
 import scipy
 
-np.random.seed(1000)
+np.random.seed(1600)
 
 class MFConfig:
     def __init__(self, M = 'rand', d=2, n=20, m=50):
@@ -19,8 +19,8 @@ class MFConfig:
             self.n = M.shape[0]
             self.m = M.shape[1]
 
-        self.k_A = 2 #intended number of clusters in latent space
-        self.k_B = 3
+        self.k_A = 4 #intended number of clusters in latent space
+        self.k_B = 4
 
         self.A = np.mat(np.random.rand(self.n,self.d)) #initializations
         self.B = np.mat(np.random.rand(self.d,self.m))
@@ -28,10 +28,10 @@ class MFConfig:
         self.lr = 0.005 #learning rate
         self.lr_decay = 1e-6 #learning rate decay
 
-        self.lambda_ = 0.5 #regularization for MSTER term in loss
+        self.lambda_ = 0.05 #regularization for MSTER term in loss
         self.lambda_decay = 0 #decay for lambda
 
-        self.eta = 0
+        self.eta = 0#3
         self.eta_decay = 0
 
         self.num_epochs = 200 #number of epochs for gradient descent

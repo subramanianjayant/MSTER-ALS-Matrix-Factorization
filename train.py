@@ -20,7 +20,7 @@ def train():
         if (epoch%10)<5:
             A = A - lr*(-(M-A*B)*B.T - lambda_*grad(A, vertices_A) - eta*(2*H(M.shape[0]).T*H(M.shape[0])*A))
         else:
-            B = B - lr*(-A.T*(M-A*B) )# - lambda_*grad(B.T, vertices_B).T - eta*(2*B*H(M.shape[1]).T*H(M.shape[1])))
+            B = B - lr*(-A.T*(M-A*B) - lambda_*grad(B.T, vertices_B).T - eta*(2*B*H(M.shape[1]).T*H(M.shape[1])))
 
         ratio_A, vertices_A = MSTER(A, k_A)
         ratio_B, vertices_B = MSTER(B.T, k_B)
