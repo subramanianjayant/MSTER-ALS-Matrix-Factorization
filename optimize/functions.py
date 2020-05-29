@@ -19,7 +19,7 @@ def MSTER(A, k):
     return ratio, vertices
 
 def loss(M, A, B, rA, rB, lambda_, eta):
-    return (np.linalg.norm(M-A*B, ord = 'fro')**2
+    return (0.5*np.linalg.norm(M-A*B, ord = 'fro')**2
                 - lambda_*(rA)#+rB)
                 - eta*(np.trace(H(M.shape[0])*A*A.T*H(M.shape[0]).T))) #+ np.trace(H(M.shape[1]).T*B.T*B*H(M.shape[1]))))
 
