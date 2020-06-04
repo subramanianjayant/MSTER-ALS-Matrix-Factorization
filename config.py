@@ -36,22 +36,25 @@ class MFConfig:
         print("B: {}".format(self.B.shape))
 
         self.lr_a = 1e-5 #learning rate
-        self.lr_a_decay = 0 #learning rate decay
+        self.lr_a_decay = 1e-8 #learning rate decay
 
-        self.lr_b = 1e-5 #learning rate
-        self.lr_b_decay = 0 #learning rate decay
+        self.lr_b = 1e-2 #learning rate
+        self.lr_b_decay = 1e-7 #learning rate decay
 
-        self.lambda_ = 100000 #regularization for MSTER term in loss
-        self.lambda_decay = 0 #decay for lambda
+        self.lambda_ = 60000 #regularization for MSTER term in loss
+        self.lambda_decay = 1 #decay for lambda
 
         self.eta = 1000
         self.eta_decay = 1
 
         self.num_epochs = 100 #number of epochs for gradient descent
 
+        self.clip_a = 1000000
+        self.clip_b = 1000000
+
     def dump(self):
         return (self.M, self.A, self.B, self.k_A, self.k_B, self.lr_a,
                     self.lr_a_decay, self.lr_b,
                     self.lr_b_decay, self.lambda_, self.lambda_decay,
                     self.eta, self.eta_decay,
-                    self.num_epochs)
+                    self.num_epochs, self.clip_a, self.clip_b)
