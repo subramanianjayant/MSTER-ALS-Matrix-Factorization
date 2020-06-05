@@ -7,12 +7,15 @@ from sklearn.cluster import KMeans
 from config import MFConfig
 import pandas as pd
 from sklearn.decomposition import PCA
+import copy
 
-num_points = 250
+num_points = 300
+num_clusters = 5
+random_state = 1600
 
 df = pd.read_csv('mnist_784_zip/data/mnist_784_csv.csv')
-df = df.loc[df['class'].isin([0,1,4,8])]
-df = df.sample(n=num_points, random_state=1600)
+df = df.loc[df['class'].isin([0,1,4,6,8])]
+df = df.sample(n=num_points, random_state=random_state)
 labels = np.array(df['class'])
 data = np.mat(df.drop('class', axis=1))
 
@@ -72,8 +75,11 @@ if __name__ == '__main__':
     A_best, B_best = train()
 
     ### Dim Reduction
+    base = {1: [], 4: [], 6: [], 8: [], 0: []} #{1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 0: []}
+    base_kmeans = {0: [], 1: [], 2: [], 3:[], 4:[]}
+    legend = [1,4,6,8,0]
 
-    _dict = {1: [], 4: [], 8: [], 0: []}
+    _dict = copy.deepcopy(base)
     for i,row in enumerate(np.array(A_best)):
         _dict[labels[i]].append(row)
 
@@ -81,9 +87,9 @@ if __name__ == '__main__':
     plt.title('d=2 MSTER-ALS Representation of MNIST Sample (n={})'.format(num_points))
     for i in _dict.keys():
         plt.scatter(np.array(_dict[i])[:,0], np.array(_dict[i])[:,1], alpha=0.6)
-    plt.legend(range(10))
+    plt.legend(legend)
 
-    _dict2 = {1: [], 4: [], 8: [], 0: []} #{1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 0: []}
+    _dict2 = copy.deepcopy(base)
     for i,row in enumerate(np.array(pca_init)):
         _dict2[labels[i]].append(row)
 
@@ -91,19 +97,16 @@ if __name__ == '__main__':
     plt.title('d=2 PCA Representation of MNIST Sample (n={})'.format(num_points))
     for i in _dict2.keys():
         plt.scatter(np.array(_dict2[i])[:,0], np.array(_dict2[i])[:,1], alpha=0.6)
-    plt.legend(range(10))
+    plt.legend(legend)
 
     ### KMeans stuff
-
-    num_clusters = 4
-    random_state = 1600
 
     predictions_MSTER = KMeans(n_clusters = num_clusters, random_state = random_state).fit(A_best).labels_
     predictions_PCA = KMeans(n_clusters = num_clusters, random_state = random_state).fit(pca_init).labels_
 
     plt.figure(3)
     plt.title('K-Means predictions for MSTER')
-    _dict3 = {0: [], 1: [], 2: [], 3: []}
+    _dict3 = copy.deepcopy(base_kmeans)
     for i,row in enumerate(np.array(A_best)):
         _dict3[predictions_MSTER[i]].append(row)
     for i in _dict3.keys():
@@ -112,7 +115,7 @@ if __name__ == '__main__':
 
     plt.figure(4)
     plt.title('K-Means predictions for PCA')
-    _dict4 = {0: [], 1: [], 2: [], 3: []}
+    _dict4 = copy.deepcopy(base_kmeans)
     for i,row in enumerate(np.array(pca_init)):
         _dict4[predictions_PCA[i]].append(row)
     for i in _dict4.keys():
