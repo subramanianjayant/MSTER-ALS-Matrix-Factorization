@@ -22,7 +22,7 @@ class MFConfig:
 
         print("M: {}".format(self.M.shape))
 
-        self.k_A = 10 #intended number of clusters in latent space
+        self.k_A = 4 #intended number of clusters in latent space
         self.k_B = 4
 
         self.A = np.mat(np.random.rand(self.n,self.d)) #initializations
@@ -35,17 +35,17 @@ class MFConfig:
         print("A: {}".format(self.A.shape))
         print("B: {}".format(self.B.shape))
 
-        self.lr_a = 1e-5 #learning rate
-        self.lr_a_decay = 1e-8 #learning rate decay
+        self.lr_a = 1e-4 #learning rate
+        self.lr_a_decay = 0 #learning rate decay
 
-        self.lr_b = 1e-2 #learning rate
-        self.lr_b_decay = 1e-7 #learning rate decay
+        self.lr_b = 1e-5 #learning rate
+        self.lr_b_decay = 1e-9 #learning rate decay
 
-        self.lambda_ = 60000 #regularization for MSTER term in loss
-        self.lambda_decay = 1 #decay for lambda
+        self.lambda_ = 2e4 #regularization for MSTER term in loss
+        self.lambda_decay = 0 #decay for lambda
 
-        self.eta = 1000
-        self.eta_decay = 1
+        self.eta = 1e2
+        self.eta_decay = 0
 
         self.num_epochs = 100 #number of epochs for gradient descent
 
