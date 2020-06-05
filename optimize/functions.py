@@ -16,12 +16,20 @@ def MSTER(A, k):
     edge_list.sort(key=lambda x: x[2]['weight'])
     ratio = (edge_list[size-k][2]['weight']/edge_list[size-k-1][2]['weight'])**2-1
     vertices = np.array([[edge_list[size-k][0], edge_list[size-k][1]],[edge_list[size-k-1][0],edge_list[size-k-1][1]]])
-    return ratio, vertices
+    for i in range(2,k+1):
+        mst.remove_edge(edge_list[size - i][0], edge_list[size - i][1])
+    clusters = nx.connected_components(mst)
+    balance = 0
+    for cluster in clusters:
+        balance += (len(cluster) - size/k)**2
+        print(balance)
+    return ratio, vertices, balance
 
-def loss(M, A, B, rA, rB, lambda_, eta):
+def loss(M, A, B, rA, bA, lambda_, eta):
     return (0.5*np.linalg.norm(M-A*B, ord = 'fro')**2
                 - lambda_*(rA)#+rB)
-                - eta*(np.trace(H(M.shape[0])*A*A.T*H(M.shape[0]).T))) #+ np.trace(H(M.shape[1]).T*B.T*B*H(M.shape[1]))))
+                - eta*(np.trace(H(M.shape[0])*A*A.T*H(M.shape[0]).T)) #+ np.trace(H(M.shape[1]).T*B.T*B*H(M.shape[1]))))
+                + vega*(bA))
 
 def grad(A, vert):
     mat = np.mat(np.zeros((A.shape)))
@@ -71,3 +79,7 @@ def grad(A, vert):
                                 ((np.sum(np.square(A[vert[1,0],:]-A[vert[1,1],:])))**2))
     #print(mat)
     return mat
+
+def balance_grad():
+    #Need something that is differentiable
+    pass

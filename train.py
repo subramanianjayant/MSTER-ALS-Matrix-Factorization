@@ -13,30 +13,30 @@ data = np.mat(df.drop('class', axis=1))
 
 pca_0 = PCA(n_components = 30) #initial dim reduction for faster MST computation (from tSNE paper)
 init_data = np.mat(pca_0.fit_transform(data))
-(M, A, B, k_A, k_B, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs) = MFConfig(M=init_data).dump()
+(M, A, B, k_A, k_B, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, vega, vega_decay, num_epochs) = MFConfig(M=init_data).dump()
 
 pca = PCA(n_components = 2)
-pca_init = np.mat(pca.fit_transform(init_data))
+pca_init = np.mat(pca.fit_transform(data))
 
 def train():
-    global M, A, B, k_A, k_B, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs
+    global M, A, B, k_A, k_B, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, vega, vega_decay, num_epochs
     A_best = A.copy()
     B_best = B.copy()
 
-    ratio_A, vertices_A = MSTER(A, k_A)
-    ratio_B, vertices_B = MSTER(B.T, k_B)
-    loss_best = loss(M,A,B,ratio_A, ratio_B, lambda_, eta)
+    ratio_A, vertices_A, balance_A = MSTER(A, k_A)
+    # ratio_B, vertices_B = MSTER(B.T, k_B)
+    loss_best = loss(M,A,B,ratio_A, balance_A, lambda_, eta, vega)
     for epoch in range(num_epochs):
         best = ''
         if (epoch%10)<5:
             #print(grad(A, vertices_A))
-            A = A - lr_a*(-(M-A*B)*B.T - lambda_*grad(A, vertices_A) - eta*(2*H(M.shape[0]).T*H(M.shape[0])*A))
+            A = A - lr_a*(-(M-A*B)*B.T - lambda_*grad(A, vertices_A) - eta*(2*H(M.shape[0]).T*H(M.shape[0])*A) - vega*balance_A)
         else:
             B = B - lr_b*(-A.T*(M-A*B)) #- lambda_*grad(B.T, vertices_B).T - eta*(2*B*H(M.shape[1]).T*H(M.shape[1])))
 
-        ratio_A, vertices_A = MSTER(A, k_A)
-        ratio_B, vertices_B = MSTER(B.T, k_B)
-        loss_ = loss(M,A,B,ratio_A, ratio_B, lambda_, eta)
+        ratio_A, vertices_A, balance_A = MSTER(A, k_A)
+        # ratio_B, vertices_B = MSTER(B.T, k_B)
+        loss_ = loss(M,A,B,ratio_A, balance_A, lambda_, eta, vega)
 
         if loss_<loss_best:
             A_best = A.copy()
@@ -48,6 +48,7 @@ def train():
         lr_b -= lr_b_decay
         lambda_ -= lambda_decay
         eta -= eta_decay
+        vega -= vega_decay
 
         print("epoch {0} --- \t loss: {1} \t norm contribution: {2} \t {3}".format(epoch,
                 loss_, 0.5*np.linalg.norm(M-A*B, ord = 'fro')**2, best))
