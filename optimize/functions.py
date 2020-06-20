@@ -23,51 +23,51 @@ def MSTER(A, k):
 
 #Linkage Cost Ratio (Ward)
 def LCR(A, k):
-    agc = AgglomerativeClustering(n_clusters=k-1, linkage='ward').fit(A)
+    agc = AgglomerativeClustering(n_clusters=k+1, linkage='ward').fit(A)
     temp_vals = pd.get_dummies(pd.Series(agc.labels_))
     min = np.inf
     C_index = 0
     D_index = 0
     for i in range(len(temp_vals.columns)):
         for j in range(i+1,len(temp_vals.columns)):
-            P_ = list(temp_vals[i])
-            Q_ = list(temp_vals[j])
+            P_ = np.array(temp_vals[i])
+            Q_ = np.array(temp_vals[j])
             cost = MergeCost(A, P_, Q_)/(sum(P_)*sum(Q_))
             if  cost < min:
                 min = cost
                 C_index = i
                 D_index = j
-    C_ = temp_vals[C_index]
-    D_ = temp_vals[D_index]
+    C_ = np.array(temp_vals[C_index])
+    D_ = np.array(temp_vals[D_index])
 
     temp_vals['new'] = temp_vals[C_index]+temp_vals[D_index]
-    temp_vals.drop([C_index, D_index], axis=1)
-    temp_vals.rename(columns={x:y for x,y in zip(temp_vals.columns,range(0,len(temp_vals.columns)))})
-
+    temp_vals = temp_vals.drop([C_index, D_index], axis=1)
+    temp_vals = temp_vals.rename(columns={x:y for x,y in zip(temp_vals.columns,range(0,len(temp_vals.columns)))})
+    #print(temp_vals)
     min = np.inf
     A_index = 0
     B_index = 0
     for i in range(len(temp_vals.columns)):
         for j in range(i+1,len(temp_vals.columns)):
-            P_ = list(temp_vals[i])
-            Q_ = list(temp_vals[j])
+            P_ = np.array(temp_vals[i])
+            Q_ = np.array(temp_vals[j])
             cost = MergeCost(A, P_, Q_)/(sum(P_)*sum(Q_))
             if  cost < min:
                 min = cost
                 A_index = i
                 B_index = j
-    A_ = temp_vals[A_index]
-    B_ = temp_vals[B_index]
+    A_ = np.array(temp_vals[A_index])
+    B_ = np.array(temp_vals[B_index])
     ratio = (sum(C_)*sum(D_)*MergeCost(A, A_, B_))/(sum(A_)*sum(B_)*MergeCost(A, C_, D_))
     return ratio, A_, B_, C_, D_
 
 def MergeCost(A, A_, B_):
     return np.sum(np.array([[np.linalg.norm(A_[i]*A[i]-B_[j]*A[j])**2 for i in range(len(A))] for j in range(len(A))]).flatten())
 
-def loss(M, A, B, rA, rB, lambda_, eta):
+def loss(M, A, B, rA, lambda_, eta):
     return (0.5*np.linalg.norm(M-A*B, ord = 'fro')**2
-                - lambda_*(rA)#+rB)
-                - eta*(np.trace(H(M.shape[0])*A*A.T*H(M.shape[0]).T))) #+ np.trace(H(M.shape[1]).T*B.T*B*H(M.shape[1]))))
+                - lambda_*(rA)
+                - eta*(np.trace(H(M.shape[0])*A*A.T*H(M.shape[0]).T)))
 
 # def grad(A, vert):
 #     mat = np.mat(np.zeros((A.shape)))
@@ -121,10 +121,16 @@ def loss(M, A, B, rA, rB, lambda_, eta):
 def grad(A, A_, B_, C_, D_):
     mat = np.mat(np.zeros((A.shape)))
     coeff = (sum(C_)*sum(D_))/(sum(A_)*sum(B_))
-    for k,x in enumerate(A):
-        temp1 = MergeCost(A, C_, D_)
-        temp2 = MergeCost(A, A_, B_)
-        diff1 = 2*len(A)*(A_[k]+B_[k])*x-np.sum(np.array([(A_[k]*B_[j]-B_[k]*A_[j])*A[j] for j in range(len(A))]))
-        diff2 = 2*len(A)*(C_[k]+D_[k])*x-np.sum(np.array([(C_[k]*D_[j]-D_[k]*C_[j])*A[j] for j in range(len(A))]))
-        mat[k] = (temp1*diff1-temp2*diff2)/(temp2**2)
+    temp1 = MergeCost(A, C_, D_)
+    temp2 = MergeCost(A, A_, B_)
+    diff1 = 2*len(A)*np.diag(A_+B_)*A-(np.mat(A_).reshape(-1,1)*np.mat(B_).reshape(-1,1).T+np.mat(B_).reshape(-1,1)*np.mat(A_).reshape(-1,1).T)*A
+    diff2 = 2*len(A)*np.diag(C_+D_)*A-(np.mat(C_).reshape(-1,1)*np.mat(D_).reshape(-1,1).T+np.mat(D_).reshape(-1,1)*np.mat(C_).reshape(-1,1).T)*A
+    # print(diff1)
+    # print(diff2)
+    # for k,x in enumerate(A):
+    #     diff1_ = 2*len(A)*(A_[k]+B_[k])*x-np.sum(np.array([(A_[k]*B_[j]-B_[k]*A_[j])*A[j] for j in range(len(A))]))
+    #     diff2_ = 2*len(A)*(C_[k]+D_[k])*x-np.sum(np.array([(C_[k]*D_[j]-D_[k]*C_[j])*A[j] for j in range(len(A))]))
+    #     print(diff1_)
+    #     print(diff2_)
+    #     #mat[k] = (temp1*diff1-temp2*diff2)/(temp2**2)
     return coeff*mat

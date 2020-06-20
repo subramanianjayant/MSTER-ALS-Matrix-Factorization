@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.metrics import pairwise, normalized_mutual_info_score, adjusted_rand_score
 import networkx as nx
 from matplotlib import pyplot as plt
-from optimize.functions import MSTER, loss, grad, H
+from optimize.functions import MSTER, LCR, loss, grad, H
 from sklearn.cluster import KMeans
 from config import MFConfig
 import pandas as pd
@@ -21,21 +21,20 @@ data = np.mat(df.drop('class', axis=1))
 
 pca_0 = PCA(n_components = 30) #initial dim reduction for faster MST computation (from tSNE paper)
 init_data = np.mat(pca_0.fit_transform(data))
-(M, A, B, k_A, k_B, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs, clip_a, clip_b) = MFConfig(M=init_data).dump()
+(M, A, B, k_A, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs, clip_a, clip_b) = MFConfig(M=init_data).dump()
 
 pca = PCA(n_components = 2)
 pca_init = np.mat(pca.fit_transform(init_data))
 
 def train():
-    global M, A, B, k_A, k_B, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs, clip_a, clip_b
+    global M, A, B, k_A, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs, clip_a, clip_b
     A_best = A.copy()
     B_best = B.copy()
 
     # ratio_A, vertices_A = MSTER(A, k_A)
     # ratio_B, vertices_B = MSTER(B.T, k_B)
     ratio_A, A_A, B_A, C_A, D_A = LCR(A, k_A)
-    ratio_B, A_B, B_B, C_B, D_B = LCR(A, k_B)
-    loss_best = loss(M,A,B,ratio_A, ratio_B, lambda_, eta)
+    loss_best = loss(M,A,B,ratio_A, lambda_, eta)
     for epoch in range(num_epochs):
         best = ''
         if (epoch%10)<5:
@@ -52,13 +51,12 @@ def train():
             if n > clip_b:
                 gradient = clip_b * gradient/n
 
-            B = B - lr_b*gradient #- lambda_*grad(B.T, vertices_B).T - eta*(2*B*H(M.shape[1]).T*H(M.shape[1])))
+            B = B - lr_b*gradient
 
         # ratio_A, vertices_A = MSTER(A, k_A)
         # ratio_B, vertices_B = MSTER(B.T, k_B)
         ratio_A, A_A, B_A, C_A, D_A = LCR(A, k_A)
-        ratio_B, A_B, B_B, C_B, D_B = LCR(A, k_B)
-        loss_ = loss(M,A,B,ratio_A, ratio_B, lambda_, eta)
+        loss_ = loss(M,A,B,ratio_A, lambda_, eta)
 
         if loss_<loss_best:
             A_best = A.copy()
