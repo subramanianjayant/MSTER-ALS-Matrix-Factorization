@@ -123,14 +123,14 @@ def grad(A, A_, B_, C_, D_):
     coeff = (sum(C_)*sum(D_))/(sum(A_)*sum(B_))
     temp1 = MergeCost(A, C_, D_)
     temp2 = MergeCost(A, A_, B_)
-    diff1 = 2*len(A)*np.diag(A_+B_)*A-(np.mat(A_).reshape(-1,1)*np.mat(B_).reshape(-1,1).T+np.mat(B_).reshape(-1,1)*np.mat(A_).reshape(-1,1).T)*A
-    diff2 = 2*len(A)*np.diag(C_+D_)*A-(np.mat(C_).reshape(-1,1)*np.mat(D_).reshape(-1,1).T+np.mat(D_).reshape(-1,1)*np.mat(C_).reshape(-1,1).T)*A
+    # diff1 = 2*len(A)*np.diag(A_+B_)*A-(np.mat(A_).reshape(-1,1)*np.mat(B_).reshape(-1,1).T+np.mat(B_).reshape(-1,1)*np.mat(A_).reshape(-1,1).T)*A
+    # diff2 = 2*len(A)*np.diag(C_+D_)*A-(np.mat(C_).reshape(-1,1)*np.mat(D_).reshape(-1,1).T+np.mat(D_).reshape(-1,1)*np.mat(C_).reshape(-1,1).T)*A
     # print(diff1)
     # print(diff2)
-    # for k,x in enumerate(A):
-    #     diff1_ = 2*len(A)*(A_[k]+B_[k])*x-np.sum(np.array([(A_[k]*B_[j]-B_[k]*A_[j])*A[j] for j in range(len(A))]))
-    #     diff2_ = 2*len(A)*(C_[k]+D_[k])*x-np.sum(np.array([(C_[k]*D_[j]-D_[k]*C_[j])*A[j] for j in range(len(A))]))
-    #     print(diff1_)
-    #     print(diff2_)
-    #     #mat[k] = (temp1*diff1-temp2*diff2)/(temp2**2)
+    for k,x in enumerate(A):
+        diff1 = 2*len(A)*(A_[k]+B_[k])*x-np.sum(np.array([(A_[k]*B_[j]-B_[k]*A_[j])*A[j] for j in range(len(A))]))
+        diff2 = 2*len(A)*(C_[k]+D_[k])*x-np.sum(np.array([(C_[k]*D_[j]-D_[k]*C_[j])*A[j] for j in range(len(A))]))
+        # print(diff1_)
+        # print(diff2_)
+        mat[k] = (temp1*diff1-temp2*diff2)/(temp2**2)
     return coeff*mat

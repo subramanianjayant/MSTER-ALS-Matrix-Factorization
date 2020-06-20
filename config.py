@@ -2,7 +2,7 @@ import numpy as np
 import scipy
 from sklearn.decomposition import PCA
 
-np.random.seed(1600)
+np.random.seed(1601)
 
 class MFConfig:
     def __init__(self, M = None, d=2, n=20, m=50):
@@ -34,13 +34,13 @@ class MFConfig:
         print("A: {}".format(self.A.shape))
         print("B: {}".format(self.B.shape))
 
-        self.lr_a = 5e-2 #learning rate
+        self.lr_a = 5e-3 #learning rate
         self.lr_a_decay = 0 #learning rate decay
 
-        self.lr_b = 5e-3 #learning rate
+        self.lr_b = 5e-5 #learning rate
         self.lr_b_decay = 1e-9 #learning rate decay
 
-        self.lambda_ = 1e4 #regularization for MSTER term in loss
+        self.lambda_ = 1e7 #regularization for MSTER term in loss
         self.lambda_decay = 0 #decay for lambda
 
         self.eta = 0
