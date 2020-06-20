@@ -9,7 +9,7 @@ import pandas as pd
 from sklearn.decomposition import PCA
 import copy
 
-num_points = 300
+num_points = 100
 num_clusters = 5
 random_state = 1600
 
@@ -31,13 +31,16 @@ def train():
     A_best = A.copy()
     B_best = B.copy()
 
-    ratio_A, vertices_A = MSTER(A, k_A)
-    ratio_B, vertices_B = MSTER(B.T, k_B)
+    # ratio_A, vertices_A = MSTER(A, k_A)
+    # ratio_B, vertices_B = MSTER(B.T, k_B)
+    ratio_A, A_A, B_A, C_A, D_A = LCR(A, k_A)
+    ratio_B, A_B, B_B, C_B, D_B = LCR(A, k_B)
     loss_best = loss(M,A,B,ratio_A, ratio_B, lambda_, eta)
     for epoch in range(num_epochs):
         best = ''
         if (epoch%10)<5:
-            gradient = (-(M-A*B)*B.T - lambda_*grad(A,vertices_A) - eta*(2*H(M.shape[0]).T*H(M.shape[0])*A))
+            # gradient = (-(M-A*B)*B.T - lambda_*grad(A,vertices_A) - eta*(2*H(M.shape[0]).T*H(M.shape[0])*A))
+            gradient = (-(M-A*B)*B.T - lambda_*grad(A,A_A, B_A, C_A, D_A) - eta*(2*H(M.shape[0]).T*H(M.shape[0])*A))
             n = np.linalg.norm(gradient, ord='fro')
             if n > clip_a:
                 gradient = clip_a * gradient/n
@@ -51,8 +54,10 @@ def train():
 
             B = B - lr_b*gradient #- lambda_*grad(B.T, vertices_B).T - eta*(2*B*H(M.shape[1]).T*H(M.shape[1])))
 
-        ratio_A, vertices_A = MSTER(A, k_A)
-        ratio_B, vertices_B = MSTER(B.T, k_B)
+        # ratio_A, vertices_A = MSTER(A, k_A)
+        # ratio_B, vertices_B = MSTER(B.T, k_B)
+        ratio_A, A_A, B_A, C_A, D_A = LCR(A, k_A)
+        ratio_B, A_B, B_B, C_B, D_B = LCR(A, k_B)
         loss_ = loss(M,A,B,ratio_A, ratio_B, lambda_, eta)
 
         if loss_<loss_best:
@@ -135,5 +140,3 @@ if __name__ == '__main__':
     print("MSTER Rand score: {} \n PCA Rand score: {}".format(score_MSTER, score_PCA))
 
     plt.show()
-
-
