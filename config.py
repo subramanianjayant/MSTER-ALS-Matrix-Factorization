@@ -24,12 +24,14 @@ class MFConfig:
 
         self.k_A = 5 #intended number of clusters in latent space
 
+        # RANDOM INITIALIZATIONS
         self.A = np.mat(np.random.rand(self.n,self.d)) #initializations
         self.B = np.mat(np.random.rand(self.d,self.m))
 
-        #pca = PCA(n_components=self.d)
-        #self.A = np.mat(pca.fit_transform(self.M))
-        #self.B = np.mat(pca.components_)
+        # PCA INITIALIZATIONS
+        # pca = PCA(n_components=self.d)
+        # self.A = np.mat(pca.fit_transform(self.M))
+        # self.B = np.mat(pca.components_)
 
         print("A: {}".format(self.A.shape))
         print("B: {}".format(self.B.shape))
@@ -40,8 +42,8 @@ class MFConfig:
         self.lr_b = 5e-5 #learning rate
         self.lr_b_decay = 1e-9 #learning rate decay
 
-        self.lambda_ = 1e7 #regularization for MSTER term in loss
-        self.lambda_decay = 0 #decay for lambda
+        self.lambda_ = 500000 #regularization for MSTER term in loss
+        self.lambda_decay = -100 #decay for lambda
 
         self.eta = 0
         self.eta_decay = 0

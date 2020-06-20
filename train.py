@@ -9,7 +9,7 @@ import pandas as pd
 from sklearn.decomposition import PCA
 import copy
 
-num_points = 100
+num_points = 1000
 num_clusters = 5
 random_state = 1600
 

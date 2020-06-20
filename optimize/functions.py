@@ -62,7 +62,9 @@ def LCR(A, k):
     return ratio, A_, B_, C_, D_
 
 def MergeCost(A, A_, B_):
-    return np.sum(np.array([[np.linalg.norm(A_[i]*A[i]-B_[j]*A[j])**2 for i in range(len(A))] for j in range(len(A))]).flatten())
+    A_p = np.diag(A_)
+    B_p = np.diag(B_)
+    return np.asscalar(np.trace(B_p)*np.trace(A_p*A*A.T*A_p)+np.trace(A_p)*np.trace(B_p*A*A.T*B_p)-2*(A.T*A_p*np.mat(np.ones((len(A),1)))).T*(A.T*B_p*np.mat(np.ones((len(A),1)))))
 
 def loss(M, A, B, rA, lambda_, eta):
     return (0.5*np.linalg.norm(M-A*B, ord = 'fro')**2
@@ -121,16 +123,14 @@ def loss(M, A, B, rA, lambda_, eta):
 def grad(A, A_, B_, C_, D_):
     mat = np.mat(np.zeros((A.shape)))
     coeff = (sum(C_)*sum(D_))/(sum(A_)*sum(B_))
+    A_p = np.diag(A_)
+    B_p = np.diag(B_)
+    C_p = np.diag(C_)
+    D_p = np.diag(D_)
+    n = len(A)
     temp1 = MergeCost(A, C_, D_)
     temp2 = MergeCost(A, A_, B_)
-    # diff1 = 2*len(A)*np.diag(A_+B_)*A-(np.mat(A_).reshape(-1,1)*np.mat(B_).reshape(-1,1).T+np.mat(B_).reshape(-1,1)*np.mat(A_).reshape(-1,1).T)*A
-    # diff2 = 2*len(A)*np.diag(C_+D_)*A-(np.mat(C_).reshape(-1,1)*np.mat(D_).reshape(-1,1).T+np.mat(D_).reshape(-1,1)*np.mat(C_).reshape(-1,1).T)*A
-    # print(diff1)
-    # print(diff2)
-    for k,x in enumerate(A):
-        diff1 = 2*len(A)*(A_[k]+B_[k])*x-np.sum(np.array([(A_[k]*B_[j]-B_[k]*A_[j])*A[j] for j in range(len(A))]))
-        diff2 = 2*len(A)*(C_[k]+D_[k])*x-np.sum(np.array([(C_[k]*D_[j]-D_[k]*C_[j])*A[j] for j in range(len(A))]))
-        # print(diff1_)
-        # print(diff2_)
-        mat[k] = (temp1*diff1-temp2*diff2)/(temp2**2)
+    diff1 = 2*(sum(B_)*A_p*A_p.T+sum(A_)*B_p*B_p.T-B_p*np.ones((n,n))*A_p-A_p*np.ones((n,n))*B_p)*A
+    diff2 = 2*(sum(D_)*C_p*C_p.T+sum(C_)*D_p*D_p.T-D_p*np.ones((n,n))*C_p-C_p*np.ones((n,n))*D_p)*A
+    mat = (temp1*diff1-temp2*diff2)/(temp2**2)
     return coeff*mat
