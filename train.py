@@ -10,39 +10,39 @@ from sklearn.decomposition import PCA
 import copy
 from termcolor import colored
 
-desired_classes = [0,1,2,3,4]
-num_points = 200
-random_state = 1601
+desired_classes = [0,1,8]
+num_points = 300
+random_state = 1600
 np.random.seed(random_state)
 
 ################## SAMPLE DATASET ################
-from sklearn import datasets
+# from sklearn import datasets
 
-arr = np.zeros((5,20))
-arr[0,0:3] = [5, 5,-10]
-arr[1,0:3] = [5,-5,-10]
-arr[2,0:3] = [-5,5,-10]
-arr[3,0:3] = [-5,-5,-10]
-arr[4,2] = 20
-init_data, labels = datasets.make_blobs(n_samples=num_points, n_features=20, centers = arr, cluster_std=0.2)
-init_data = np.mat(init_data)
-synth_pca = PCA(n_components=2)
-pca_init = synth_pca.fit_transform(init_data)
-(M, A, B, k_A, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs, clip_a, clip_b, random_state_config) = MFConfig(M=init_data).dump()
+# arr = np.zeros((5,20))
+# arr[0,0:3] = [1, 1,-2]
+# arr[1,0:3] = [1,-1,-2]
+# arr[2,0:3] = [-1,1,-2]
+# arr[3,0:3] = [-1,-1,-2]
+# arr[4,2] = 3
+# init_data, labels = datasets.make_blobs(n_samples=num_points, n_features=20, centers = arr, cluster_std=0.2)
+# init_data = np.mat(init_data)
+# synth_pca = PCA(n_components=2)
+# pca_init = synth_pca.fit_transform(init_data)
+# (M, A, B, k_A, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs, clip_a, clip_b, random_state_config) = MFConfig(M=init_data).dump()
 ##################################################
 
-# df = pd.read_csv('mnist_784_zip/data/mnist_784_csv.csv')
-# df = df.loc[df['class'].isin([0,1,4,6,8])]
-# df = df.sample(n=num_points, random_state=random_state)
-# labels = np.array(df['class'])
-# data = np.mat(df.drop('class', axis=1))
+df = pd.read_csv('mnist_784_zip/data/mnist_784_csv.csv')
+df = df.loc[df['class'].isin(desired_classes)]
+df = df.sample(n=num_points, random_state=random_state)
+labels = np.array(df['class'])
+data = np.mat(df.drop('class', axis=1))
 
-# pca_0 = PCA(n_components = 30) #initial dim reduction for faster MST computation (from tSNE paper)
-# init_data = np.mat(pca_0.fit_transform(data))
-# (M, A, B, k_A, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs, clip_a, clip_b) = MFConfig(M=init_data).dump()
+pca_0 = PCA(n_components = 30) #initial dim reduction for faster MST computation (from tSNE paper)
+init_data = np.mat(pca_0.fit_transform(data))
+(M, A, B, k_A, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs, clip_a, clip_b, random_state_config) = MFConfig(M=init_data).dump()
 
-# pca = PCA(n_components = 2)
-# pca_init = np.mat(pca.fit_transform(init_data))
+synth_pca = PCA(n_components = 2)
+pca_init = np.mat(synth_pca.fit_transform(init_data))
 
 def train():
     global M, A, B, k_A, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs, clip_a, clip_b
@@ -89,8 +89,8 @@ def train():
         lambda_ -= lambda_decay
         eta -= eta_decay
 
-        print("epoch {0} --- \t loss: {1} \t norm contribution: {2} \t {3}".format(epoch,
-                loss_, 0.5*np.linalg.norm(M-A*B, ord = 'fro')**2, best))
+        print("epoch {0} --- \t loss: {1} \t norm contribution: {2} \t ratio: {3} \t {4}".format(epoch,
+                loss_, 0.5*np.linalg.norm(M-A*B, ord = 'fro')**2, 1 - (loss_/(0.5*np.linalg.norm(M-A*B, ord = 'fro')**2)), best))
 
     return A_best,B_best #returns best model in terms of loss
 
