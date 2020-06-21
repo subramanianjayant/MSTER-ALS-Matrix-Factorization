@@ -29,12 +29,14 @@ class MFConfig:
 
         self.k_A = 3 #intended number of clusters in latent space
 
-        # self.A = np.mat(np.random.rand(self.n,self.d)) #initializations
-        # self.B = np.mat(np.random.rand(self.d,self.m))
+        # RANDOM INITIALIZATIONS
+        self.A = np.mat(np.random.rand(self.n,self.d)) #initializations
+        self.B = np.mat(np.random.rand(self.d,self.m))
 
-        pca = PCA(n_components=self.d)
-        self.A = np.mat(pca.fit_transform(self.M))
-        self.B = np.mat(pca.components_)
+        # PCA INITIALIZATIONS
+        # pca = PCA(n_components=self.d)
+        # self.A = np.mat(pca.fit_transform(self.M))
+        # self.B = np.mat(pca.components_)
 
         print("A: {}".format(self.A.shape))
         print("B: {}".format(self.B.shape))
