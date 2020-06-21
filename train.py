@@ -8,14 +8,12 @@ from config import MFConfig
 import pandas as pd
 from sklearn.decomposition import PCA
 import copy
-
-# desired_classes = [0,1,8]
-# num_points = 200
+from termcolor import colored
 
 desired_classes = [0,1,2,3,4]
 num_points = 200
-num_clusters = 5
-random_state = 1600
+random_state = 1601
+np.random.seed(random_state)
 
 ################## SAMPLE DATASET ################
 from sklearn import datasets
@@ -30,7 +28,7 @@ init_data, labels = datasets.make_blobs(n_samples=num_points, n_features=20, cen
 init_data = np.mat(init_data)
 synth_pca = PCA(n_components=2)
 pca_init = synth_pca.fit_transform(init_data)
-(M, A, B, k_A, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs, clip_a, clip_b) = MFConfig(M=init_data).dump()
+(M, A, B, k_A, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs, clip_a, clip_b, random_state_config) = MFConfig(M=init_data).dump()
 ##################################################
 
 # df = pd.read_csv('mnist_784_zip/data/mnist_784_csv.csv')
@@ -50,6 +48,8 @@ def train():
     global M, A, B, k_A, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs, clip_a, clip_b
     A_best = A.copy()
     B_best = B.copy()
+
+    assert k_A == len(desired_classes)
 
     # ratio_A, vertices_A = MSTER(A, k_A)
     # ratio_B, vertices_B = MSTER(B.T, k_B)
@@ -110,7 +110,7 @@ if __name__ == '__main__':
         _dict[labels[i]].append(row)
 
     plt.figure(1)
-    plt.title('d=2 MSTER-ALS Representation of MNIST Sample (n={})'.format(num_points))
+    plt.title('d=2 LCR-ALS Representation of MNIST Sample (n={})'.format(num_points))
     for i in _dict.keys():
         plt.scatter(np.array(_dict[i])[:,0], np.array(_dict[i])[:,1], alpha=0.6)
     plt.legend(desired_classes)
@@ -131,7 +131,7 @@ if __name__ == '__main__':
     predictions_PCA = KMeans(n_clusters = k_A, random_state = random_state).fit(pca_init).labels_
 
     plt.figure(3)
-    plt.title('K-Means predictions for MSTER')
+    plt.title('K-Means predictions for LCR')
     _dict3 = copy.deepcopy(base_kmeans)
     for i,row in enumerate(np.array(A_best)):
         _dict3[predictions_MSTER[i]].append(row)
@@ -152,15 +152,19 @@ if __name__ == '__main__':
     score_MSTER = normalized_mutual_info_score(labels, predictions_MSTER)
     score_PCA = normalized_mutual_info_score(labels, predictions_PCA)
 
-    print("MSTER NMI score: {} \n PCA NMI score: {}".format(score_MSTER, score_PCA))
+    print(colored("LCR NMI score: {} \n PCA NMI score: {}".format(score_MSTER, score_PCA),"green"))
 
     ### ARI
     score_MSTER = adjusted_rand_score(labels, predictions_MSTER)
     score_PCA = adjusted_rand_score(labels, predictions_PCA)
 
-    print("MSTER Rand score: {} \n PCA Rand score: {}".format(score_MSTER, score_PCA))
+    print(colored("LCR Rand score: {} \n PCA Rand score: {}".format(score_MSTER, score_PCA), "green"))
 
-    print("lambda={}_rand={}".format(lambda_, random_state))
+    LCR_norm = 0.5*np.linalg.norm(M-A_best*B_best, ord = 'fro')**2
+    PCA_norm = 0.5*np.linalg.norm(M-pca_init*np.mat(synth_pca.components_), ord = 'fro')**2
+    print(colored("Norm increase = {}".format(LCR_norm/PCA_norm), "red"))
+
+    print(colored("lambda={}_rand_config={}_rand_train={}".format(lambda_, random_state_config, random_state), "blue"))
 
     plt.show()
 

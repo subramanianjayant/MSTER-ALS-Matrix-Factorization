@@ -27,11 +27,11 @@ class MFConfig:
         # self.num_points = 10 #number of points to sample from dataset
         # self.desired_classes = [0,1] #which numbers to take from MNIST
 
-        self.k_A = 3 #intended number of clusters in latent space
+        self.k_A = 5 #intended number of clusters in latent space
 
         # RANDOM INITIALIZATIONS
-        self.A = 10*np.mat(np.random.rand(self.n,self.d)) #initializations
-        self.B = 3*np.mat(np.random.rand(self.d,self.m))
+        self.A = 3*np.mat(np.random.rand(self.n,self.d)) #initializations
+        self.B = np.mat(np.random.rand(self.d,self.m))
 
         # PCA INITIALIZATIONS
         # pca = PCA(n_components=self.d)
@@ -53,10 +53,10 @@ class MFConfig:
         self.eta = 0
         self.eta_decay = 0
 
-        self.num_epochs = 500 #number of epochs for gradient descent
+        self.num_epochs = 300 #number of epochs for gradient descent
 
-        self.clip_a = 1000
-        self.clip_b = 1000
+        self.clip_a = 10000
+        self.clip_b = 10000
 
     def dump(self):
         return (self.M, self.A, self.B, self.k_A, self.lr_a,
