@@ -25,8 +25,8 @@ class MFConfig:
         self.k_A = 5 #intended number of clusters in latent space
 
         # RANDOM INITIALIZATIONS
-        self.A = np.mat(np.random.rand(self.n,self.d)) #initializations
-        self.B = np.mat(np.random.rand(self.d,self.m))
+        self.A = 10*np.mat(np.random.rand(self.n,self.d)) #initializations
+        self.B = 3*np.mat(np.random.rand(self.d,self.m))
 
         # PCA INITIALIZATIONS
         # pca = PCA(n_components=self.d)
@@ -36,22 +36,22 @@ class MFConfig:
         print("A: {}".format(self.A.shape))
         print("B: {}".format(self.B.shape))
 
-        self.lr_a = 5e-3 #learning rate
+        self.lr_a = 1e-2 #learning rate
         self.lr_a_decay = 0 #learning rate decay
 
-        self.lr_b = 5e-5 #learning rate
-        self.lr_b_decay = 1e-9 #learning rate decay
+        self.lr_b = 1e-4 #learning rate
+        self.lr_b_decay = 0 #learning rate decay
 
-        self.lambda_ = 500000 #regularization for MSTER term in loss
-        self.lambda_decay = -100 #decay for lambda
+        self.lambda_ = 20 #regularization for MSTER term in loss
+        self.lambda_decay = 0 #decay for lambda
 
         self.eta = 0
         self.eta_decay = 0
 
-        self.num_epochs = 100 #number of epochs for gradient descent
+        self.num_epochs = 500 #number of epochs for gradient descent
 
-        self.clip_a = 100000
-        self.clip_b = 100000
+        self.clip_a = 1000
+        self.clip_b = 1000
 
     def dump(self):
         return (self.M, self.A, self.B, self.k_A, self.lr_a,
