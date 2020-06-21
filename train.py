@@ -12,6 +12,7 @@ import copy
 # desired_classes = [0,1,8]
 # num_points = 200
 
+desired_classes = [0,1,2,3,4]
 num_points = 200
 num_clusters = 5
 random_state = 1600
@@ -97,20 +98,12 @@ if __name__ == '__main__':
     A_best, B_best = train()
 
     ### Dim Reduction
-<<<<<<< HEAD
     base = {} 
     for class_ in desired_classes:
         base[class_] = []
     base_kmeans = {}
     for i in range(len(desired_classes)):
         base_kmeans[i] = []
-=======
-    #base = {1: [], 4: [], 6: [], 8: [], 0: []} #{1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 0: []}
-    base = {0: [], 1: [], 2: [], 3: [], 4: []}
-    base_kmeans = {0: [], 1: [], 2: [], 3:[], 4:[]}
-    #legend = [1,4,6,8,0]
-    legend = [0,1,2,3,4]
->>>>>>> 25c045ce8f4d8f74248c56d105c71585b9f53948
 
     _dict = copy.deepcopy(base)
     for i,row in enumerate(np.array(A_best)):
