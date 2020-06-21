@@ -44,17 +44,10 @@ class MFConfig:
         self.lr_a = 1e-2 #learning rate
         self.lr_a_decay = 0 #learning rate decay
 
-<<<<<<< HEAD
-        self.lr_b = 5e-7 #learning rate
-        self.lr_b_decay = 1e-9 #learning rate decay
-
-        self.lambda_ = 2e10 #regularization for MSTER term in loss
-=======
         self.lr_b = 1e-4 #learning rate
         self.lr_b_decay = 0 #learning rate decay
 
         self.lambda_ = 20 #regularization for MSTER term in loss
->>>>>>> 25c045ce8f4d8f74248c56d105c71585b9f53948
         self.lambda_decay = 0 #decay for lambda
 
         self.eta = 0
@@ -62,13 +55,8 @@ class MFConfig:
 
         self.num_epochs = 500 #number of epochs for gradient descent
 
-<<<<<<< HEAD
-        self.clip_a = 1e5
-        self.clip_b = 2e4
-=======
         self.clip_a = 1000
         self.clip_b = 1000
->>>>>>> 25c045ce8f4d8f74248c56d105c71585b9f53948
 
     def dump(self):
         return (self.M, self.A, self.B, self.k_A, self.lr_a,

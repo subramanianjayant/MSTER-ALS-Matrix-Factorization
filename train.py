@@ -9,21 +9,9 @@ import pandas as pd
 from sklearn.decomposition import PCA
 import copy
 
-<<<<<<< HEAD
-desired_classes = [0,1,8]
-num_points = 200
+# desired_classes = [0,1,8]
+# num_points = 200
 
-df = pd.read_csv('mnist_784_zip/data/mnist_784_csv.csv')
-df = df.loc[df['class'].isin(desired_classes)]
-df = df.sample(n=num_points, random_state=1600)
-labels = np.array(df['class'])
-data = np.mat(df.drop('class', axis=1))
-
-pca_0 = PCA(n_components = 30) #initial dim reduction for faster MST computation (from tSNE paper)
-init_data = np.mat(pca_0.fit_transform(data))
-(M, A, B, k_A, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs, clip_a, clip_b, random_state) = MFConfig(M=init_data).dump()
-assert len(desired_classes) == k_A
-=======
 num_points = 200
 num_clusters = 5
 random_state = 1600
@@ -53,7 +41,6 @@ pca_init = synth_pca.fit_transform(init_data)
 # pca_0 = PCA(n_components = 30) #initial dim reduction for faster MST computation (from tSNE paper)
 # init_data = np.mat(pca_0.fit_transform(data))
 # (M, A, B, k_A, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs, clip_a, clip_b) = MFConfig(M=init_data).dump()
->>>>>>> 25c045ce8f4d8f74248c56d105c71585b9f53948
 
 # pca = PCA(n_components = 2)
 # pca_init = np.mat(pca.fit_transform(init_data))
