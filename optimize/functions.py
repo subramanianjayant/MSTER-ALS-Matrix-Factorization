@@ -37,8 +37,8 @@ def LCR(A, k):
                 min = cost
                 C_index = i
                 D_index = j
-    C_ = np.array(temp_vals[C_index])
-    D_ = np.array(temp_vals[D_index])
+    C_ = np.array(temp_vals[C_index], dtype=np.int64)
+    D_ = np.array(temp_vals[D_index], dtype=np.int64)
 
     temp_vals['new'] = temp_vals[C_index]+temp_vals[D_index]
     temp_vals = temp_vals.drop([C_index, D_index], axis=1)
@@ -56,8 +56,8 @@ def LCR(A, k):
                 min = cost
                 A_index = i
                 B_index = j
-    A_ = np.array(temp_vals[A_index])
-    B_ = np.array(temp_vals[B_index])
+    A_ = np.array(temp_vals[A_index], dtype=np.int64)
+    B_ = np.array(temp_vals[B_index], dtype=np.int64)
     ratio = (sum(C_)*sum(D_)*MergeCost(A, A_, B_))/(sum(A_)*sum(B_)*MergeCost(A, C_, D_))
     return ratio, A_, B_, C_, D_
 
@@ -130,7 +130,7 @@ def grad(A, A_, B_, C_, D_):
     for k,x in enumerate(A):
         diff1 = 2*len(A)*(A_[k]+B_[k])*x-np.sum(np.array([(A_[k]*B_[j]-B_[k]*A_[j])*A[j] for j in range(len(A))]))
         diff2 = 2*len(A)*(C_[k]+D_[k])*x-np.sum(np.array([(C_[k]*D_[j]-D_[k]*C_[j])*A[j] for j in range(len(A))]))
-        # print(diff1_)
-        # print(diff2_)
+        # print(diff1)
+        # print(diff2)
         mat[k] = (temp1*diff1-temp2*diff2)/(temp2**2)
     return coeff*mat

@@ -9,19 +9,19 @@ import pandas as pd
 from sklearn.decomposition import PCA
 import copy
 
-num_points = 100
-num_clusters = 5
-random_state = 1600
+desired_classes = [0,1,8]
+num_points = 200
 
 df = pd.read_csv('mnist_784_zip/data/mnist_784_csv.csv')
-df = df.loc[df['class'].isin([0,1,4,6,8])]
-df = df.sample(n=num_points, random_state=random_state)
+df = df.loc[df['class'].isin(desired_classes)]
+df = df.sample(n=num_points, random_state=1600)
 labels = np.array(df['class'])
 data = np.mat(df.drop('class', axis=1))
 
 pca_0 = PCA(n_components = 30) #initial dim reduction for faster MST computation (from tSNE paper)
 init_data = np.mat(pca_0.fit_transform(data))
-(M, A, B, k_A, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs, clip_a, clip_b) = MFConfig(M=init_data).dump()
+(M, A, B, k_A, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs, clip_a, clip_b, random_state) = MFConfig(M=init_data).dump()
+assert len(desired_classes) == k_A
 
 pca = PCA(n_components = 2)
 pca_init = np.mat(pca.fit_transform(init_data))
@@ -78,9 +78,12 @@ if __name__ == '__main__':
     A_best, B_best = train()
 
     ### Dim Reduction
-    base = {1: [], 4: [], 6: [], 8: [], 0: []} #{1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 0: []}
-    base_kmeans = {0: [], 1: [], 2: [], 3:[], 4:[]}
-    legend = [1,4,6,8,0]
+    base = {} 
+    for class_ in desired_classes:
+        base[class_] = []
+    base_kmeans = {}
+    for i in range(len(desired_classes)):
+        base_kmeans[i] = []
 
     _dict = copy.deepcopy(base)
     for i,row in enumerate(np.array(A_best)):
@@ -90,7 +93,7 @@ if __name__ == '__main__':
     plt.title('d=2 MSTER-ALS Representation of MNIST Sample (n={})'.format(num_points))
     for i in _dict.keys():
         plt.scatter(np.array(_dict[i])[:,0], np.array(_dict[i])[:,1], alpha=0.6)
-    plt.legend(legend)
+    plt.legend(desired_classes)
 
     _dict2 = copy.deepcopy(base)
     for i,row in enumerate(np.array(pca_init)):
@@ -100,12 +103,12 @@ if __name__ == '__main__':
     plt.title('d=2 PCA Representation of MNIST Sample (n={})'.format(num_points))
     for i in _dict2.keys():
         plt.scatter(np.array(_dict2[i])[:,0], np.array(_dict2[i])[:,1], alpha=0.6)
-    plt.legend(legend)
+    plt.legend(desired_classes)
 
     ### KMeans stuff
 
-    predictions_MSTER = KMeans(n_clusters = num_clusters, random_state = random_state).fit(A_best).labels_
-    predictions_PCA = KMeans(n_clusters = num_clusters, random_state = random_state).fit(pca_init).labels_
+    predictions_MSTER = KMeans(n_clusters = k_A, random_state = random_state).fit(A_best).labels_
+    predictions_PCA = KMeans(n_clusters = k_A, random_state = random_state).fit(pca_init).labels_
 
     plt.figure(3)
     plt.title('K-Means predictions for MSTER')
@@ -137,4 +140,8 @@ if __name__ == '__main__':
 
     print("MSTER Rand score: {} \n PCA Rand score: {}".format(score_MSTER, score_PCA))
 
+    print("lambda={}_rand={}".format(lambda_, random_state))
+
     plt.show()
+
+    

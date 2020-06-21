@@ -2,12 +2,14 @@ import numpy as np
 import scipy
 from sklearn.decomposition import PCA
 
-np.random.seed(1601)
 
 class MFConfig:
     def __init__(self, M = None, d=2, n=20, m=50):
 
         self.d = d #latent space dimensionality
+
+        self.random_state = 1800
+        np.random.seed(self.random_state)
 
         if M is None:
             self.n = n
@@ -22,14 +24,17 @@ class MFConfig:
 
         print("M: {}".format(self.M.shape))
 
-        self.k_A = 5 #intended number of clusters in latent space
+        # self.num_points = 10 #number of points to sample from dataset
+        # self.desired_classes = [0,1] #which numbers to take from MNIST
 
-        self.A = np.mat(np.random.rand(self.n,self.d)) #initializations
-        self.B = np.mat(np.random.rand(self.d,self.m))
+        self.k_A = 3 #intended number of clusters in latent space
 
-        #pca = PCA(n_components=self.d)
-        #self.A = np.mat(pca.fit_transform(self.M))
-        #self.B = np.mat(pca.components_)
+        # self.A = np.mat(np.random.rand(self.n,self.d)) #initializations
+        # self.B = np.mat(np.random.rand(self.d,self.m))
+
+        pca = PCA(n_components=self.d)
+        self.A = np.mat(pca.fit_transform(self.M))
+        self.B = np.mat(pca.components_)
 
         print("A: {}".format(self.A.shape))
         print("B: {}".format(self.B.shape))
@@ -37,10 +42,10 @@ class MFConfig:
         self.lr_a = 5e-3 #learning rate
         self.lr_a_decay = 0 #learning rate decay
 
-        self.lr_b = 5e-5 #learning rate
+        self.lr_b = 5e-7 #learning rate
         self.lr_b_decay = 1e-9 #learning rate decay
 
-        self.lambda_ = 1e7 #regularization for MSTER term in loss
+        self.lambda_ = 2e10 #regularization for MSTER term in loss
         self.lambda_decay = 0 #decay for lambda
 
         self.eta = 0
@@ -48,12 +53,13 @@ class MFConfig:
 
         self.num_epochs = 100 #number of epochs for gradient descent
 
-        self.clip_a = 100000
-        self.clip_b = 100000
+        self.clip_a = 1e5
+        self.clip_b = 2e4
 
     def dump(self):
         return (self.M, self.A, self.B, self.k_A, self.lr_a,
                     self.lr_a_decay, self.lr_b,
                     self.lr_b_decay, self.lambda_, self.lambda_decay,
                     self.eta, self.eta_decay,
-                    self.num_epochs, self.clip_a, self.clip_b)
+                    self.num_epochs, self.clip_a, self.clip_b, self.random_state)
+
