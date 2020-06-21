@@ -9,6 +9,7 @@ import pandas as pd
 from sklearn.decomposition import PCA
 import copy
 
+<<<<<<< HEAD
 desired_classes = [0,1,8]
 num_points = 200
 
@@ -22,9 +23,40 @@ pca_0 = PCA(n_components = 30) #initial dim reduction for faster MST computation
 init_data = np.mat(pca_0.fit_transform(data))
 (M, A, B, k_A, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs, clip_a, clip_b, random_state) = MFConfig(M=init_data).dump()
 assert len(desired_classes) == k_A
+=======
+num_points = 200
+num_clusters = 5
+random_state = 1600
 
-pca = PCA(n_components = 2)
-pca_init = np.mat(pca.fit_transform(init_data))
+################## SAMPLE DATASET ################
+from sklearn import datasets
+
+arr = np.zeros((5,20))
+arr[0,0:3] = [5, 5,-10]
+arr[1,0:3] = [5,-5,-10]
+arr[2,0:3] = [-5,5,-10]
+arr[3,0:3] = [-5,-5,-10]
+arr[4,2] = 20
+init_data, labels = datasets.make_blobs(n_samples=num_points, n_features=20, centers = arr, cluster_std=0.2)
+init_data = np.mat(init_data)
+synth_pca = PCA(n_components=2)
+pca_init = synth_pca.fit_transform(init_data)
+(M, A, B, k_A, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs, clip_a, clip_b) = MFConfig(M=init_data).dump()
+##################################################
+
+# df = pd.read_csv('mnist_784_zip/data/mnist_784_csv.csv')
+# df = df.loc[df['class'].isin([0,1,4,6,8])]
+# df = df.sample(n=num_points, random_state=random_state)
+# labels = np.array(df['class'])
+# data = np.mat(df.drop('class', axis=1))
+
+# pca_0 = PCA(n_components = 30) #initial dim reduction for faster MST computation (from tSNE paper)
+# init_data = np.mat(pca_0.fit_transform(data))
+# (M, A, B, k_A, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs, clip_a, clip_b) = MFConfig(M=init_data).dump()
+>>>>>>> 25c045ce8f4d8f74248c56d105c71585b9f53948
+
+# pca = PCA(n_components = 2)
+# pca_init = np.mat(pca.fit_transform(init_data))
 
 def train():
     global M, A, B, k_A, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs, clip_a, clip_b
@@ -78,12 +110,20 @@ if __name__ == '__main__':
     A_best, B_best = train()
 
     ### Dim Reduction
+<<<<<<< HEAD
     base = {} 
     for class_ in desired_classes:
         base[class_] = []
     base_kmeans = {}
     for i in range(len(desired_classes)):
         base_kmeans[i] = []
+=======
+    #base = {1: [], 4: [], 6: [], 8: [], 0: []} #{1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 0: []}
+    base = {0: [], 1: [], 2: [], 3: [], 4: []}
+    base_kmeans = {0: [], 1: [], 2: [], 3:[], 4:[]}
+    #legend = [1,4,6,8,0]
+    legend = [0,1,2,3,4]
+>>>>>>> 25c045ce8f4d8f74248c56d105c71585b9f53948
 
     _dict = copy.deepcopy(base)
     for i,row in enumerate(np.array(A_best)):
