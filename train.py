@@ -26,7 +26,7 @@ init_data, labels = datasets.make_blobs(n_samples=num_points, n_features=20, cen
 init_data = np.mat(init_data)
 synth_pca = PCA(n_components=2)
 pca_init = synth_pca.fit_transform(init_data)
-(M, A, B, k_A, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs, clip_a, clip_b) = MFConfig(M=init_data).dump()
+(M, P, k, lr, lr_decay, num_epochs, clip) = MFConfig(M=init_data).dump()
 ##################################################
 
 # df = pd.read_csv('mnist_784_zip/data/mnist_784_csv.csv')
@@ -37,62 +37,45 @@ pca_init = synth_pca.fit_transform(init_data)
 
 # pca_0 = PCA(n_components = 30) #initial dim reduction for faster MST computation (from tSNE paper)
 # init_data = np.mat(pca_0.fit_transform(data))
-# (M, A, B, k_A, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs, clip_a, clip_b) = MFConfig(M=init_data).dump()
+# (M, P, k, lr, lr_decay, num_epochs, clip) = MFConfig(M=init_data).dump()
 
 # pca = PCA(n_components = 2)
 # pca_init = np.mat(pca.fit_transform(init_data))
 
 def train():
-    global M, A, B, k_A, lr_a, lr_a_decay, lr_b, lr_b_decay, lambda_, lambda_decay, eta, eta_decay, num_epochs, clip_a, clip_b
-    A_best = A.copy()
-    B_best = B.copy()
+    global M, P, k, lr, lr_decay, num_epochs, clip
+    P_best = P.copy()
 
-    # ratio_A, vertices_A = MSTER(A, k_A)
-    # ratio_B, vertices_B = MSTER(B.T, k_B)
-    ratio_A, A_A, B_A, C_A, D_A = LCR(A, k_A)
-    loss_best = loss(M,A,B,ratio_A, lambda_, eta)
+    # ratio, vertices = MSTER(M*P, k)
+    ratio, A, B, C, D = LCR(M*P, k)
+    loss_best = loss(ratio)
     for epoch in range(num_epochs):
         best = ''
-        if (epoch%10)<5:
-            # gradient = (-(M-A*B)*B.T - lambda_*grad(A,vertices_A) - eta*(2*H(M.shape[0]).T*H(M.shape[0])*A))
-            gradient = (-(M-A*B)*B.T - lambda_*grad(A,A_A, B_A, C_A, D_A) - eta*(2*H(M.shape[0]).T*H(M.shape[0])*A))
-            n = np.linalg.norm(gradient, ord='fro')
-            if n > clip_a:
-                gradient = clip_a * gradient/n
+        gradient = grad(M, P, A, B, C, D)
+        n = np.linalg.norm(gradient, ord='fro')
+        if n > clip:
+            gradient = clip * gradient/n
 
-            A = A - lr_a*gradient
-        else:
-            gradient = (-A.T*(M-A*B))
-            n = np.linalg.norm(gradient, ord='fro')
-            if n > clip_b:
-                gradient = clip_b * gradient/n
+        P = P - lr*gradient
 
-            B = B - lr_b*gradient
-
-        # ratio_A, vertices_A = MSTER(A, k_A)
-        # ratio_B, vertices_B = MSTER(B.T, k_B)
-        ratio_A, A_A, B_A, C_A, D_A = LCR(A, k_A)
-        loss_ = loss(M,A,B,ratio_A, lambda_, eta)
+        # ratio, vertices = MSTER(M*P, k)
+        ratio, A, B, C, D = LCR(M*P, k)
+        loss_ = loss(ratio)
 
         if loss_<loss_best:
-            A_best = A.copy()
-            B_best = B.copy()
+            P_best = P.copy()
             best = 'best'
             loss_best = loss_
 
-        lr_a -= lr_a_decay
-        lr_b -= lr_b_decay
-        lambda_ -= lambda_decay
-        eta -= eta_decay
+        lr -= lr_decay
 
-        print("epoch {0} --- \t loss: {1} \t norm contribution: {2} \t {3}".format(epoch,
-                loss_, 0.5*np.linalg.norm(M-A*B, ord = 'fro')**2, best))
+        print("epoch {0} --- \t loss: {1} \t {2}".format(epoch, loss_, best))
 
-    return A_best,B_best #returns best model in terms of loss
+    return P_best #returns best model in terms of loss
 
 if __name__ == '__main__':
-    A_best, B_best = train()
-
+    P_best = train()
+    A_best = M*P_best
     ### Dim Reduction
     #base = {1: [], 4: [], 6: [], 8: [], 0: []} #{1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 0: []}
     base = {0: [], 1: [], 2: [], 3: [], 4: []}
@@ -105,7 +88,7 @@ if __name__ == '__main__':
         _dict[labels[i]].append(row)
 
     plt.figure(1)
-    plt.title('d=2 MSTER-ALS Representation of MNIST Sample (n={})'.format(num_points))
+    plt.title('d=2 LCR Representation of MNIST Sample (n={})'.format(num_points))
     for i in _dict.keys():
         plt.scatter(np.array(_dict[i])[:,0], np.array(_dict[i])[:,1], alpha=0.6)
     plt.legend(legend)
@@ -126,7 +109,7 @@ if __name__ == '__main__':
     predictions_PCA = KMeans(n_clusters = num_clusters, random_state = random_state).fit(pca_init).labels_
 
     plt.figure(3)
-    plt.title('K-Means predictions for MSTER')
+    plt.title('K-Means predictions for LCR')
     _dict3 = copy.deepcopy(base_kmeans)
     for i,row in enumerate(np.array(A_best)):
         _dict3[predictions_MSTER[i]].append(row)

@@ -66,10 +66,8 @@ def MergeCost(A, A_, B_):
     B_p = np.diag(B_)
     return np.asscalar(np.trace(B_p)*np.trace(A_p*A*A.T*A_p)+np.trace(A_p)*np.trace(B_p*A*A.T*B_p)-2*(A.T*A_p*np.mat(np.ones((len(A),1)))).T*(A.T*B_p*np.mat(np.ones((len(A),1)))))
 
-def loss(M, A, B, rA, lambda_, eta):
-    return (0.5*np.linalg.norm(M-A*B, ord = 'fro')**2
-                - lambda_*(rA)
-                - eta*(np.trace(H(M.shape[0])*A*A.T*H(M.shape[0]).T)))
+def loss(ratio):
+    return ratio
 
 # def grad(A, vert):
 #     mat = np.mat(np.zeros((A.shape)))
@@ -120,7 +118,8 @@ def loss(M, A, B, rA, lambda_, eta):
 #     #print(mat)
 #     return mat
 
-def grad(A, A_, B_, C_, D_):
+def grad(M, P, A_, B_, C_, D_):
+    A = M*P
     mat = np.mat(np.zeros((A.shape)))
     coeff = (sum(C_)*sum(D_))/(sum(A_)*sum(B_))
     A_p = np.diag(A_)
@@ -130,7 +129,7 @@ def grad(A, A_, B_, C_, D_):
     n = len(A)
     temp1 = MergeCost(A, C_, D_)
     temp2 = MergeCost(A, A_, B_)
-    diff1 = 2*(sum(B_)*A_p*A_p.T+sum(A_)*B_p*B_p.T-B_p*np.ones((n,n))*A_p-A_p*np.ones((n,n))*B_p)*A
-    diff2 = 2*(sum(D_)*C_p*C_p.T+sum(C_)*D_p*D_p.T-D_p*np.ones((n,n))*C_p-C_p*np.ones((n,n))*D_p)*A
+    diff1 = 2*(sum(B_)*M.T*A_p*A_p.T*M+sum(A_)*M.T*B_p*B_p.T*M-M.T*B_p*np.ones((n,n))*A_p*M-M.T*A_p*np.ones((n,n))*B_p*M)*P
+    diff2 = 2*(sum(D_)*M.T*C_p*C_p.T*M+sum(C_)*M.T*D_p*D_p.T*M-M.T*D_p*np.ones((n,n))*C_p*M-M.T*C_p*np.ones((n,n))*D_p*M)*P
     mat = (temp1*diff1-temp2*diff2)/(temp2**2)
     return coeff*mat
