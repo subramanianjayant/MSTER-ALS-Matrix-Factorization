@@ -2,12 +2,12 @@ import numpy as np
 import scipy
 from sklearn.decomposition import PCA
 
-np.random.seed(1601)
-
 class MFConfig:
-    def __init__(self, M = None, d=2, n=20, m=50):
+    def __init__(self, M = None, k=6, seed = 1600, d=2, n=100, m=20):
 
         self.d = d #latent space dimensionality
+        self.random_state = seed
+        np.random.seed(self.random_state)
 
         if M is None:
             self.n = n
@@ -22,25 +22,26 @@ class MFConfig:
 
         print("M: {}".format(self.M.shape))
 
-        self.k = 5 #intended number of clusters in latent space
+        self.k = k #intended number of clusters in latent space
 
         # RANDOM INITIALIZATION
-        self.P = 10*np.mat(np.random.rand(self.n,self.d)) #initializations
+        # self.P = 10*np.mat(np.random.rand(self.m,self.d))
 
         # PCA INITIALIZATION
-        # pca = PCA(n_components=self.d)
-        # pca.fit_transform(self.M)
-        # self.P = np.mat(pca.components_)
+        pca = PCA(n_components=self.d)
+        pca.fit_transform(self.M)
+        self.P = np.mat(pca.components_).T
 
         print("P: {}".format(self.P.shape))
 
-        self.lr = 1e-2 #learning rate
+        self.lr = 1e-1 #learning rate
         self.lr_decay = 0 #learning rate decay
 
-        self.num_epochs = 500 #number of epochs for gradient descent
+        self.num_epochs = 200 #number of epochs for gradient descent
 
-        self.clip = 1000
+        self.clip = 1000000
 
     def dump(self):
         return (self.M, self.P, self.k, self.lr,
-                self.lr_decay, self.num_epochs, self.clip)
+                self.lr_decay, self.num_epochs, self.clip,
+                self.random_state)
