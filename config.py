@@ -34,12 +34,12 @@ class MFConfig:
 
         print("P: {}".format(self.P.shape))
 
-        self.lr = 1e-1 #learning rate
+        self.lr = 0.5 #learning rate
         self.lr_decay = 0 #learning rate decay
 
-        self.num_epochs = 200 #number of epochs for gradient descent
+        self.num_epochs = 750 #number of epochs for gradient descent
 
-        self.clip = 1000000
+        self.clip = 10000000
 
     def dump(self):
         return (self.M, self.P, self.k, self.lr,

@@ -10,7 +10,7 @@ from sklearn.decomposition import PCA
 import copy
 from termcolor import colored
 
-num_points = 200
+num_points = 2000
 random_state = 1600
 np.random.seed(random_state)
 
