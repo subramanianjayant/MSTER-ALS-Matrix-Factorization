@@ -28,6 +28,11 @@ class datasets():
 		self.simplexes = {}
 		self.polyhedra = {}
 
+		###characteristics of modified datasets
+		self.characteristics = {
+			"normal" : (lambda arr ,k : list(datasets.make_blobs(n_samples=self.num_points, n_features=k, centers = arr, cluster_std=self.std)))
+		}
+
 		###imbalanced clusters; ONE pair of adjacent clusters is imbalanced with one having 4x the number of the other. All other clusters are unaffected
 		self.imbalanced_point_distributions = {}
 		for i in range(2,7):
@@ -44,7 +49,7 @@ class datasets():
 		arr[0,0:2] = [self.distance/2, 0]
 		arr[1,0:2] = [-self.distance/2, 0]
 		
-		self.balanced_clusters_normal[k] = list(datasets.make_blobs(n_samples=self.num_points, n_features=k, centers = arr, cluster_std=self.std))
+		self.balanced_clusters_normal[k] = self.characteristics["normal"](arr, k)
 		self.balanced_clusters_tight[k] = list(datasets.make_blobs(n_samples=self.num_points, n_features=k, centers = arr, cluster_std=self.std/2))
 		self.balanced_clusters_loose[k] = list(datasets.make_blobs(n_samples=self.num_points, n_features=k, centers = arr, cluster_std=self.std*2))
 		self.balanced_clusters_doubled[k] = list(datasets.make_blobs(n_samples=self.num_points, n_features=k, centers = arr, cluster_std=self.std))
@@ -114,7 +119,18 @@ class datasets():
 
 		###simplex
 		self.max_dimension = 10
-
+		D = self.distance**2
+		for k in range(2, self.max_dimension + 1):
+			arr = np.zeros((k+1,k))
+			arr[0] = np.full(shape = k, fill_value = -0.5)
+			for i in range(1, k+1):
+				for j in range(k):
+					if i == j+1:
+						arr[i,j] = ((D - 1) * np.sqrt(D+ 1) + 1) / (2 * D)
+					else:
+						arr[i,j] = (1 - np.sqrt(D + 1)) / (2 * D)
+			self.simplexes[k] = list(datasets.make_blobs(n_samples=self.num_points, n_features=k, centers = arr, cluster_std=self.std))
+			self.simplexes[k][0] = 100 * np.mat(np.mat(self.simplexes[k][0])) / (np.trace(np.mat(self.simplexes[k][0]) * np.mat(self.simplexes[k][0]).T))
 
 		###polyhedron
 		self.max_polyhedron = 6
@@ -165,5 +181,10 @@ if __name__ == "__main__":
 	plt.figure(5)
 	plt.scatter(x = np.array(imbalanced_clusters[k][0][:,0]), y = np.array(imbalanced_clusters[k][0][:,1]))
 	plt.axis('equal')
+
+	# from mpl_toolkits.mplot3d import Axes3D
+	# fig = plt.figure(6)
+	# ax = fig.add_subplot(111, projection='3d')
+	# ax.scatter(simplexes[3][0][:,0], simplexes[3][0][:,1], simplexes[3][0][:,2])
 
 	plt.show()
