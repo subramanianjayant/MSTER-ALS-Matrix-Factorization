@@ -37,7 +37,7 @@ class datasets():
 			"imbalanced" : (lambda arr,k : list(datasets.make_blobs(n_samples=self.imbalanced_point_distributions[k], n_features=k, centers = arr, cluster_std=self.std)))
 		}
 
-		###dictionary format; dict[k] returns tuple (dataset, labels) where k is number of clusters
+		###dictionary format; dict[characteristic][k] returns list [dataset, labels] where k is number of clusters
 		base = {}
 		for key in self.characteristics.keys():
 			base[key] = {}
@@ -81,11 +81,12 @@ class datasets():
 		###5 clusters is pentagon
 		k=5
 		arr = np.zeros((k ,2))
-		arr[0,0:2] = [0, self.distance]
-		arr[1,0:2] = [self.distance * np.cos(np.pi/10), self.distance * np.sin(np.pi/10)]
-		arr[2,0:2] = [self.distance * np.cos(-np.pi * 0.3), self.distance * np.sin(-np.pi * 0.3)]
-		arr[3,0:2] = [-self.distance * np.cos(np.pi/10), self.distance * np.sin(np.pi/10)]
-		arr[4,0:2] = [-self.distance * np.cos(-np.pi * 0.3), self.distance * np.sin(-np.pi * 0.3)]
+		l = self.distance / (2*np.sin(np.pi / 5))
+		arr[0,0:2] = [0, l]
+		arr[1,0:2] = [l * np.cos(np.pi * 0.1), l * np.sin(np.pi * 0.1)]
+		arr[2,0:2] = [l * np.cos(-np.pi * 0.3), l * np.sin(-np.pi * 0.3)]
+		arr[3,0:2] = [-l * np.cos(np.pi * 0.1), l * np.sin(np.pi * 0.1)]
+		arr[4,0:2] = [-l* np.cos(-np.pi * 0.3), l * np.sin(-np.pi * 0.3)]
 
 		for characteristic, function in self.characteristics.items():
 			self._2d_clusters[characteristic][k] = function(arr,k)
@@ -104,7 +105,6 @@ class datasets():
 			self._2d_clusters[characteristic][k] = function(arr,k)
 
 ### Simplex ###
-
 		self.max_dimension = 10
 		D = self.distance**2
 		for characteristic, function in self.characteristics.items():
@@ -118,6 +118,7 @@ class datasets():
 						else:
 							arr[i,j] = (1 - np.sqrt(D + 1)) / (2 * D)
 				self.simplexes[characteristic][d+1] = function(arr, d+1)
+		#TODO ensure the intercluster distances between two points in the simplex is constant, independent of k
 
 ### Polyhedron ###
 
@@ -127,15 +128,15 @@ class datasets():
 		for characteristic in self._2d_clusters.keys():
 			for k in self._2d_clusters[characteristic].keys():
 				if characteristic == "double":
-					self._2d_clusters[characteristic][k][0] = 200 * np.mat(np.mat(self._2d_clusters[characteristic][k][0])) / (np.trace(np.mat(self._2d_clusters[characteristic][k][0]) * np.mat(self._2d_clusters[characteristic][k][0]).T))
+					self._2d_clusters[characteristic][k][0] = 200 * np.mat(np.mat(self._2d_clusters[characteristic][k][0])) / (np.trace(np.mat(self._2d_clusters[characteristic][k][0]).T * np.mat(self._2d_clusters[characteristic][k][0])))
 				else:
-					self._2d_clusters[characteristic][k][0] = 100 * np.mat(np.mat(self._2d_clusters[characteristic][k][0])) / (np.trace(np.mat(self._2d_clusters[characteristic][k][0]) * np.mat(self._2d_clusters[characteristic][k][0]).T))
+					self._2d_clusters[characteristic][k][0] = 100 * np.mat(np.mat(self._2d_clusters[characteristic][k][0])) / (np.trace(np.mat(self._2d_clusters[characteristic][k][0]).T * np.mat(self._2d_clusters[characteristic][k][0])))
 		for characteristic in self.simplexes.keys():
 			for k in self.simplexes[characteristic].keys():
 				if characteristic == "double":
-					self.simplexes[characteristic][k][0] = 200 * np.mat(np.mat(self.simplexes[characteristic][k][0])) / (np.trace(np.mat(self.simplexes[characteristic][k][0]) * np.mat(self.simplexes[characteristic][k][0]).T))
+					self.simplexes[characteristic][k][0] = 200 * np.mat(np.mat(self.simplexes[characteristic][k][0])) / (np.trace(np.mat(self.simplexes[characteristic][k][0]).T * np.mat(self.simplexes[characteristic][k][0])))
 				else:
-					self.simplexes[characteristic][k][0] = 100 * np.mat(np.mat(self.simplexes[characteristic][k][0])) / (np.trace(np.mat(self.simplexes[characteristic][k][0]) * np.mat(self.simplexes[characteristic][k][0]).T))
+					self.simplexes[characteristic][k][0] = 100 * np.mat(np.mat(self.simplexes[characteristic][k][0])) / (np.trace(np.mat(self.simplexes[characteristic][k][0]).T * np.mat(self.simplexes[characteristic][k][0])))
 
 	def get_datasets(self):
 		return (
@@ -147,31 +148,39 @@ class datasets():
 
 if __name__ == "__main__":
 
-	_2d_clusters, simplexes, polyhedra = datasets(imbalance_ratio=50).get_datasets()
-	for k in range(2,5):
-		# print(colored("{} clusters".format(k), "green"))
-		# print("Normal: {}".format(LCR(_2d_clusters["normal"][k][0],k)[0]))
-		# print("Tight: {}".format(LCR(_2d_clusters["tight"][k][0],k)[0]))
-		# print("loose: {}".format(LCR(_2d_clusters["loose"][k][0],k)[0]))
-		# print("Double: {}".format(LCR(_2d_clusters["double"][k][0],k)[0]))
-		print("Imbalanced: {}\n\n".format(LCR(_2d_clusters["imbalanced"][k][0],k)[0]))
+	_2d_clusters, simplexes, polyhedra = datasets(imbalance_ratio=10).get_datasets()
+	for k in range(2,7):
+		print(colored("{} clusters".format(k), "green"))
+		print("Normal: {}".format(LCR(_2d_clusters["normal"][k][0],k)[0]))
+	# 	print("Tight: {}".format(LCR(_2d_clusters["tight"][k][0],k)[0]))
+	# 	print("loose: {}".format(LCR(_2d_clusters["loose"][k][0],k)[0]))
+	# 	print("Double: {}".format(LCR(_2d_clusters["double"][k][0],k)[0]))
+	# 	print("Imbalanced: {}\n\n".format(LCR(_2d_clusters["imbalanced"][k][0],k)[0]))
+
+		# print("Normal: {}".format(LCR(simplexes["normal"][k][0],k)[0]))
+	# 	print("Tight: {}".format(LCR(_2d_clusters["tight"][k][0],k)[0]))
+	# 	print("loose: {}".format(LCR(_2d_clusters["loose"][k][0],k)[0]))
+	# 	print("Double: {}".format(LCR(_2d_clusters["double"][k][0],k)[0]))
+	# 	print("Imbalanced: {}\n\n".format(LCR(_2d_clusters["imbalanced"][k][0],k)[0]))
+
+	# k = 6
 
 	# plt.figure(1)
 	# plt.scatter(x = np.array(_2d_clusters["normal"][k][0][:,0]), y = np.array(_2d_clusters["normal"][k][0][:,1]))
 	# plt.axis('equal')
-	#
+	
 	# plt.figure(2)
 	# plt.scatter(x = np.array(_2d_clusters["tight"][k][0][:,0]), y = np.array(_2d_clusters["tight"][k][0][:,1]))
 	# plt.axis('equal')
-	#
+	
 	# plt.figure(3)
 	# plt.scatter(x = np.array(_2d_clusters["loose"][k][0][:,0]), y = np.array(_2d_clusters["loose"][k][0][:,1]))
 	# plt.axis('equal')
-	#
+	
 	# plt.figure(4)
 	# plt.scatter(x = np.array(_2d_clusters["double"][k][0][:,0]), y = np.array(_2d_clusters["double"][k][0][:,1]))
 	# plt.axis('equal')
-	#
+	
 	# plt.figure(5)
 	# plt.scatter(x = np.array(_2d_clusters["imbalanced"][k][0][:,0]), y = np.array(_2d_clusters["imbalanced"][k][0][:,1]))
 	# plt.axis('equal')
