@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.metrics import pairwise, normalized_mutual_info_score, adjusted_rand_score
 import networkx as nx
 from matplotlib import pyplot as plt
-from optimize.functions import MSTER, LCR, loss, grad, H
+from optimize.functions import MSTER, LCR, loss, grad, H, normalise
 from sklearn.cluster import KMeans
 from config import MFConfig
 import pandas as pd
@@ -66,7 +66,7 @@ data = np.mat(df.drop('class', axis=1))
 
 pca_0 = PCA(n_components = 60) #initial dim reduction for faster MST computation (from tSNE paper)
 init_data = np.mat(pca_0.fit_transform(data))
-(M, P, k, lr, lr_decay, num_epochs, clip, random_state) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
+(M, P, k, lr, lr_decay, lambda_, lambda_decay, num_epochs, clip, random_state) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
 synth_pca = PCA(n_components = 2)
 pca_init = np.mat(synth_pca.fit_transform(init_data))
 #####################################################
@@ -76,12 +76,14 @@ def train():
     global M, P, k, lr, lr_decay, num_epochs, clip
     P_best = P.copy()
 
+    M = normalise(M)
+
     # ratio, vertices = MSTER(M*P, k)
     ratio, A, B, C, D = LCR(M*P, k)
-    loss_best = loss(ratio)
+    loss_best = loss(M, P, ratio, lambda_)
     for epoch in range(num_epochs):
         best = ''
-        gradient = grad(M, P, A, B, C, D)
+        gradient = grad(M, P, A, B, C, D, lambda_)
         n = np.linalg.norm(gradient, ord='fro')
         if n > clip:
             gradient = clip * gradient/n
@@ -90,7 +92,7 @@ def train():
 
         # ratio, vertices = MSTER(M*P, k)
         ratio, A, B, C, D = LCR(M*P, k)
-        loss_ = loss(ratio)
+        loss_ = loss(M, P, ratio, lambda_)
 
         if loss_>loss_best:
             P_best = P.copy()

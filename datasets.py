@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
 import copy
-from optimize.functions import MSTER, LCR, loss, grad, H, pairwise_square_distance
+from optimize.functions import MSTER, LCR, loss, grad, H, pairwise_square_distance, normalise
 from matplotlib import pyplot as plt
 from termcolor import colored
 
@@ -88,7 +88,9 @@ class datasets():
 		arr[3,0:2] = [-l * np.cos(np.pi * 0.1), l * np.sin(np.pi * 0.1)]
 		arr[4,0:2] = [-l* np.cos(-np.pi * 0.3), l * np.sin(-np.pi * 0.3)]
 
-		print(pairwise_square_distance(np.mat(arr)))
+		print(normalise(arr))
+		print(normalise(3 * arr))
+
 
 		for characteristic, function in self.characteristics.items():
 			self._2d_clusters[characteristic][k] = function(arr,k)

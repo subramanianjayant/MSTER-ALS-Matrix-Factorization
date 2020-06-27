@@ -37,11 +37,16 @@ class MFConfig:
         self.lr = 10 #learning rate
         self.lr_decay = 0 #learning rate decay
 
+        self.lambda_ = 1 #
+        self.lambda_decay = 0
+
         self.num_epochs = 200 #number of epochs for gradient descent
 
         self.clip = 10000000
 
     def dump(self):
-        return (self.M, self.P, self.k, self.lr,
-                self.lr_decay, self.num_epochs, self.clip,
+        return (self.M, self.P, self.k, 
+                self.lr, self.lr_decay, 
+                self.lambda_, self.lambda_decay,
+                self.num_epochs, self.clip,
                 self.random_state)
