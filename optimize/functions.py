@@ -67,13 +67,17 @@ def MergeCost(A, A_, B_):
     B_p = np.diag(B_)
     return np.asscalar(np.trace(B_p)*np.trace(A_p*A*A.T*A_p)+np.trace(A_p)*np.trace(B_p*A*A.T*B_p)-2*(A.T*A_p*np.mat(np.ones((len(A),1)))).T*(A.T*B_p*np.mat(np.ones((len(A),1)))))
 
-def pairwise_distance(A):
-    pass
+def pairwise_square_distance(A):
+    n = A.shape[0]
+    diag = np.zeros((n,n))
+    for i in range(n):
+        diag += (E(n,i) * A * A.T * E(n,i))
+    return np.mat(diag*np.mat(np.ones((n,n))) + (diag*np.mat(np.ones((n,n)))).T - 2*A*A.T)
 
 def E(n, i):
     mat = np.zeros((n,n))
     mat[i,i] = 1
-    return np.mat()
+    return np.mat(mat)
 
 def loss(ratio):
     return ratio
