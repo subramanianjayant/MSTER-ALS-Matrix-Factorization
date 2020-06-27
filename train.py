@@ -55,7 +55,7 @@ np.random.seed(random_state)
 #####################################################################
 
 ################## MNIST ###########################
-desired_classes = [0,1,6]
+desired_classes = [0,1,8]
 num_clusters = len(desired_classes)
 
 df = pd.read_csv('mnist_784_zip/data/mnist_784_csv.csv')

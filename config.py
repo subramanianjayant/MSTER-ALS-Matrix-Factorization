@@ -25,19 +25,19 @@ class MFConfig:
         self.k = k #intended number of clusters in latent space
 
         # RANDOM INITIALIZATION
-        self.P = 3*np.mat(np.random.rand(self.m,self.d))
+        # self.P = 3*np.mat(np.random.rand(self.m,self.d))
 
         # PCA INITIALIZATION
-        # pca = PCA(n_components=self.d)
-        # pca.fit_transform(self.M)
-        # self.P = np.mat(pca.components_).T
+        pca = PCA(n_components=self.d)
+        pca.fit_transform(self.M)
+        self.P = np.mat(pca.components_).T
 
         print("P: {}".format(self.P.shape))
 
         self.lr = 10 #learning rate
         self.lr_decay = 0 #learning rate decay
 
-        self.num_epochs = 100 #number of epochs for gradient descent
+        self.num_epochs = 200 #number of epochs for gradient descent
 
         self.clip = 10000000
 
