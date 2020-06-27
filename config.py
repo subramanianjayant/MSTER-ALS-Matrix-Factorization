@@ -34,7 +34,7 @@ class MFConfig:
 
         print("P: {}".format(self.P.shape))
 
-        self.lr = 60 #learning rate
+        self.lr = 10 #learning rate
         self.lr_decay = 0 #learning rate decay
 
         self.num_epochs = 100 #number of epochs for gradient descent

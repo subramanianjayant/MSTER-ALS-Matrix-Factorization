@@ -4,6 +4,7 @@ from sklearn.decomposition import PCA
 import copy
 from optimize.functions import MSTER, LCR, loss, grad, H
 from matplotlib import pyplot as plt
+from termcolor import colored
 
 class datasets():
 	def __init__(self, distance = 5, default_ratio = 10, seed = 1600, n = 2000, imbalance_ratio = 10):
@@ -44,7 +45,7 @@ class datasets():
 		self._2d_clusters = copy.deepcopy(base)
 		self.simplexes = copy.deepcopy(base)
 		self.polyhedra = copy.deepcopy(base)
-		
+
 ### 2D Clusters ###
 
 		###2 clusters is just separated along x axis
@@ -146,33 +147,38 @@ class datasets():
 
 if __name__ == "__main__":
 
-	_2d_clusters, simplexes, polyhedra = datasets().get_datasets()
+	_2d_clusters, simplexes, polyhedra = datasets(imbalance_ratio=50).get_datasets()
+	for k in range(2,5):
+		# print(colored("{} clusters".format(k), "green"))
+		# print("Normal: {}".format(LCR(_2d_clusters["normal"][k][0],k)[0]))
+		# print("Tight: {}".format(LCR(_2d_clusters["tight"][k][0],k)[0]))
+		# print("loose: {}".format(LCR(_2d_clusters["loose"][k][0],k)[0]))
+		# print("Double: {}".format(LCR(_2d_clusters["double"][k][0],k)[0]))
+		print("Imbalanced: {}\n\n".format(LCR(_2d_clusters["imbalanced"][k][0],k)[0]))
 
-	k=4
+	# plt.figure(1)
+	# plt.scatter(x = np.array(_2d_clusters["normal"][k][0][:,0]), y = np.array(_2d_clusters["normal"][k][0][:,1]))
+	# plt.axis('equal')
+	#
+	# plt.figure(2)
+	# plt.scatter(x = np.array(_2d_clusters["tight"][k][0][:,0]), y = np.array(_2d_clusters["tight"][k][0][:,1]))
+	# plt.axis('equal')
+	#
+	# plt.figure(3)
+	# plt.scatter(x = np.array(_2d_clusters["loose"][k][0][:,0]), y = np.array(_2d_clusters["loose"][k][0][:,1]))
+	# plt.axis('equal')
+	#
+	# plt.figure(4)
+	# plt.scatter(x = np.array(_2d_clusters["double"][k][0][:,0]), y = np.array(_2d_clusters["double"][k][0][:,1]))
+	# plt.axis('equal')
+	#
+	# plt.figure(5)
+	# plt.scatter(x = np.array(_2d_clusters["imbalanced"][k][0][:,0]), y = np.array(_2d_clusters["imbalanced"][k][0][:,1]))
+	# plt.axis('equal')
 
-	plt.figure(1)
-	plt.scatter(x = np.array(_2d_clusters["normal"][k][0][:,0]), y = np.array(_2d_clusters["normal"][k][0][:,1]))
-	plt.axis('equal')
-
-	plt.figure(2)
-	plt.scatter(x = np.array(_2d_clusters["tight"][k][0][:,0]), y = np.array(_2d_clusters["tight"][k][0][:,1]))
-	plt.axis('equal')
-
-	plt.figure(3)
-	plt.scatter(x = np.array(_2d_clusters["loose"][k][0][:,0]), y = np.array(_2d_clusters["loose"][k][0][:,1]))
-	plt.axis('equal')
-
-	plt.figure(4)
-	plt.scatter(x = np.array(_2d_clusters["double"][k][0][:,0]), y = np.array(_2d_clusters["double"][k][0][:,1]))
-	plt.axis('equal')
-
-	plt.figure(5)
-	plt.scatter(x = np.array(_2d_clusters["imbalanced"][k][0][:,0]), y = np.array(_2d_clusters["imbalanced"][k][0][:,1]))
-	plt.axis('equal')
-
-	from mpl_toolkits.mplot3d import Axes3D
-	fig = plt.figure(6)
-	ax = fig.add_subplot(111, projection='3d')
-	ax.scatter(simplexes["imbalanced"][4][0][:,0], simplexes["imbalanced"][4][0][:,1], simplexes["imbalanced"][4][0][:,2])
+	# from mpl_toolkits.mplot3d import Axes3D
+	# fig = plt.figure(6)
+	# ax = fig.add_subplot(111, projection='3d')
+	# ax.scatter(simplexes["imbalanced"][4][0][:,0], simplexes["imbalanced"][4][0][:,1], simplexes["imbalanced"][4][0][:,2])
 
 	plt.show()

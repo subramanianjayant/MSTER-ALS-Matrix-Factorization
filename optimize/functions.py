@@ -58,7 +58,8 @@ def LCR(A, k):
                 B_index = j
     A_ = np.array(temp_vals[A_index])
     B_ = np.array(temp_vals[B_index])
-    ratio = (sum(C_)*sum(D_)*MergeCost(A, A_, B_))/(sum(A_)*sum(B_)*MergeCost(A, C_, D_))
+    # ratio = (sum(C_)*sum(D_)*MergeCost(A, A_, B_))/(sum(A_)*sum(B_)*MergeCost(A, C_, D_)) #balanced and imbalanced clusters treated the same
+    ratio = (4*sum(C_)*sum(D_)*MergeCost(A, A_, B_))/(((sum(A_)+sum(B_))**2)*MergeCost(A, C_, D_)) #favor balanced clusters
     return ratio, A_, B_, C_, D_
 
 def MergeCost(A, A_, B_):
@@ -121,7 +122,8 @@ def loss(ratio):
 def grad(M, P, A_, B_, C_, D_):
     A = M*P
     mat = np.mat(np.zeros((A.shape)))
-    coeff = (sum(C_)*sum(D_))/(sum(A_)*sum(B_))
+    # coeff = (sum(C_)*sum(D_))/(sum(A_)*sum(B_)) #balanced and imbalanced clusters treated the same
+    coeff = (4*sum(C_)*sum(D_))/((sum(A_)+sum(B_))**2) #favor balanced clusters over imbalanced
     A_p = np.diag(A_)
     B_p = np.diag(B_)
     C_p = np.diag(C_)
