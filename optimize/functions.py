@@ -89,7 +89,12 @@ def loss(M, P, ratio, lambda_):
 def loss_distance(M, P):
     A = M*P
     n = M.shape[0]
-    return 2 * np.linalg.norm(pairwise_square_distance(A) - pairwise_square_distance(M), ord = 'fro')**2 / (n * (n-1))
+    return np.linalg.norm(pairwise_square_distance(A) - pairwise_square_distance(M), ord = 'fro')**2 / (n * (n-1))
+
+def distance_modifier(M, P):
+    A = M*P
+    n = M.shape[0]
+    return np.array(np.triu(np.ones((n,n))))
 
 # def grad(A, vert):
 #     mat = np.mat(np.zeros((A.shape)))
@@ -159,5 +164,19 @@ def grad(M, P, A_, B_, C_, D_, lambda_):
 
 def grad_distance(M, P):
     A = M*P
-    return np.zeros(P.shape)
+    n = M.shape[0]
+    coeff =  -2 / (np.linalg.norm(pairwise_square_distance(A) - pairwise_square_distance(M), ord = 'fro')**2 * n * (n-1))
+    sum1 = np.mat(np.zeros(P.shape))
+    #These summation terms are taking far too long to calculate
+    for i in range(n):
+        #print(i)
+        sum1 += M.T * E(n,i) * (pairwise_square_distance(M) - pairwise_square_distance(A)) * np.mat(np.ones((n,n))) * E(n,i) * A
+    sum2 = np.mat(np.zeros(P.shape))
+    for i in range(n):
+        #print(i)
+        sum2 += M.T * E(n,i) * np.mat(np.ones((n,n))) * (pairwise_square_distance(M) - pairwise_square_distance(A)) * E(n,i) * A
+    term3 = 2 * M.T * (pairwise_square_distance(M) - pairwise_square_distance(A)) * A
+    grad = coeff * (sum1 + sum2 - term3)
+    #print(grad)
+    return grad
 
