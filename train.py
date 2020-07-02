@@ -184,5 +184,5 @@ if __name__ == '__main__':
     # print(colored("LCR norm score: {} \t PCA norm score: {}".format(loss_best, pca_score), "red"))
 
     print(colored("LCR Rand score: {} \n PCA Rand score: {}".format(score_MSTER, score_PCA), "green"))
-    print(colored("lr={} \t rand_state={}".format(lr, random_state), "blue"))
+    print(colored("lr={} \t lambda={} \t rand_state={}".format(lr, lambda_, random_state), "blue"))
     plt.show()

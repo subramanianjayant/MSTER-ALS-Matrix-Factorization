@@ -84,6 +84,7 @@ def normalise(A):
     return 1e5 * np.mat(np.mat(A) / np.trace(np.mat(A).T * np.mat(A)))
 
 def loss(M, P, ratio, lambda_):
+    print(ratio, loss_distance(M,P))
     return ratio - lambda_* loss_distance(M, P)
 
 def loss_distance(M, P):
@@ -160,23 +161,17 @@ def grad(M, P, A_, B_, C_, D_, lambda_):
     diff1 = 2*(sum(B_)*M.T*A_p*A_p.T*M+sum(A_)*M.T*B_p*B_p.T*M-M.T*B_p*np.ones((n,n))*A_p*M-M.T*A_p*np.ones((n,n))*B_p*M)*P
     diff2 = 2*(sum(D_)*M.T*C_p*C_p.T*M+sum(C_)*M.T*D_p*D_p.T*M-M.T*D_p*np.ones((n,n))*C_p*M-M.T*C_p*np.ones((n,n))*D_p*M)*P
     mat = (temp1*diff1-temp2*diff2)/(temp2**2)
+    print(coeff*mat)
+    print(grad_distance(M,P))
     return np.mat(coeff*mat - lambda_*grad_distance(M, P))
 
 def grad_distance(M, P):
     A = M*P
     n = M.shape[0]
     coeff =  -2 / (np.linalg.norm(pairwise_square_distance(A) - pairwise_square_distance(M), ord = 'fro')**2 * n * (n-1))
-    sum1 = np.mat(np.zeros(P.shape))
-    #These summation terms are taking far too long to calculate
-    for i in range(n):
-        #print(i)
-        sum1 += M.T * E(n,i) * (pairwise_square_distance(M) - pairwise_square_distance(A)) * np.mat(np.ones((n,n))) * E(n,i) * A
-    sum2 = np.mat(np.zeros(P.shape))
-    for i in range(n):
-        #print(i)
-        sum2 += M.T * E(n,i) * np.mat(np.ones((n,n))) * (pairwise_square_distance(M) - pairwise_square_distance(A)) * E(n,i) * A
+    sum1 = M.T * np.mat(np.diag(np.diag((pairwise_square_distance(M) - pairwise_square_distance(A)) * np.mat(np.ones((n,n)))))) * A
+    sum2 = M.T * np.mat(np.diag(np.diag(np.mat(np.ones((n,n))) * (pairwise_square_distance(M) - pairwise_square_distance(A))))) * A
     term3 = 2 * M.T * (pairwise_square_distance(M) - pairwise_square_distance(A)) * A
     grad = coeff * (sum1 + sum2 - term3)
-    #print(grad)
     return grad
 
