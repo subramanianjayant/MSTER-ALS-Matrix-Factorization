@@ -80,6 +80,7 @@ def train():
 
     # ratio, vertices = MSTER(M*P, k)
     ratio, A, B, C, D = LCR(M*P, k)
+    last_loss = -np.inf
     loss_best = loss(M, P, ratio, lambda_)
     for epoch in range(num_epochs):
         best = ''
@@ -93,12 +94,17 @@ def train():
         # ratio, vertices = MSTER(M*P, k)
         ratio, A, B, C, D = LCR(M*P, k)
         loss_ = loss(M, P, ratio, lambda_)
-
         if loss_>loss_best:
             P_best = P.copy()
             best = 'best'
             loss_best = loss_
 
+        if loss_ > last_loss:
+            last_loss = loss_
+            lr = lr *1.03
+        else:
+            last_loss = loss_
+            lr = lr*0.75
         lr -= lr_decay
 
         print("epoch {0} --- \t loss: {1} \t {2}".format(epoch, loss_, best))
