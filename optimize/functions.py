@@ -168,10 +168,9 @@ def grad(M, P, A_, B_, C_, D_, lambda_):
 def grad_distance(M, P):
     A = M*P
     n = M.shape[0]
-    coeff =  -2 / (np.linalg.norm(pairwise_square_distance(A) - pairwise_square_distance(M), ord = 'fro')**2 * n * (n-1))
+    coeff =  -4 / (n * (n-1))
     sum1 = M.T * np.mat(np.diag(np.diag((pairwise_square_distance(M) - pairwise_square_distance(A)) * np.mat(np.ones((n,n)))))) * A
     sum2 = M.T * np.mat(np.diag(np.diag(np.mat(np.ones((n,n))) * (pairwise_square_distance(M) - pairwise_square_distance(A))))) * A
     term3 = 2 * M.T * (pairwise_square_distance(M) - pairwise_square_distance(A)) * A
     grad = coeff * (sum1 + sum2 - term3)
     return grad
-
