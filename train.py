@@ -14,26 +14,27 @@ from scipy import optimize
 num_points = 200
 random_state = 1600
 np.random.seed(random_state)
+epoch = 1
 
 ################## SAMPLE DATASET (OCTAHEDRON )################
-from sklearn import datasets
-
-num_dimensions = 20
-desired_classes = [0,1,2,3,4,5]
-num_clusters = len(desired_classes)
-
-arr = np.zeros((6 ,num_dimensions))
-arr[0,0:3] = [5, 5, 0]
-arr[1,0:3] = [5, -5, 0]
-arr[2,0:3] = [-5, 5, 0]
-arr[3,0:3] = [-5,-5, 0]
-arr[4,0:3] = [0, 0, 5]
-arr[5,0:3] = [0, 0, -5]
-init_data, labels = datasets.make_blobs(n_samples=num_points, n_features=num_dimensions, centers = arr, cluster_std=0.6)
-init_data = np.mat(init_data)
-synth_pca = PCA(n_components=2)
-pca_init = synth_pca.fit_transform(init_data)
-(M, P, k, lambda_, num_epochs, random_state, method) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
+# from sklearn import datasets
+#
+# num_dimensions = 20
+# desired_classes = [0,1,2,3,4,5]
+# num_clusters = len(desired_classes)
+#
+# arr = np.zeros((6 ,num_dimensions))
+# arr[0,0:3] = [5, 5, 0]
+# arr[1,0:3] = [5, -5, 0]
+# arr[2,0:3] = [-5, 5, 0]
+# arr[3,0:3] = [-5,-5, 0]
+# arr[4,0:3] = [0, 0, 5]
+# arr[5,0:3] = [0, 0, -5]
+# init_data, labels = datasets.make_blobs(n_samples=num_points, n_features=num_dimensions, centers = arr, cluster_std=0.6)
+# init_data = np.mat(init_data)
+# synth_pca = PCA(n_components=2)
+# pca_init = synth_pca.fit_transform(init_data)
+# (M, P, k, lambda_, num_epochs, random_state, method) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
 ##################################################
 
 ################### SAMPLE DATASET (GAUSSIAN CENTER DRAWS) ###########
@@ -55,20 +56,20 @@ pca_init = synth_pca.fit_transform(init_data)
 #####################################################################
 
 ################## MNIST ###########################
-# desired_classes = [0,1,8]
-# num_clusters = len(desired_classes)
-#
-# df = pd.read_csv('mnist_784_zip/data/mnist_784_csv.csv')
-# df = df.loc[df['class'].isin(desired_classes)]
-# df = df.sample(n=num_points, random_state=random_state)
-# labels = np.array(df['class'])
-# data = np.mat(df.drop('class', axis=1))
-#
-# pca_0 = PCA(n_components = 60) #initial dim reduction for faster MST computation (from tSNE paper)
-# init_data = np.mat(pca_0.fit_transform(data))
-# (M, P, k, lambda_, num_epochs, random_state, method) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
-# synth_pca = PCA(n_components = 2)
-# pca_init = np.mat(synth_pca.fit_transform(init_data))
+desired_classes = [0,1,8]
+num_clusters = len(desired_classes)
+
+df = pd.read_csv('mnist_784_zip/data/mnist_784_csv.csv')
+df = df.loc[df['class'].isin(desired_classes)]
+df = df.sample(n=num_points, random_state=random_state)
+labels = np.array(df['class'])
+data = np.mat(df.drop('class', axis=1))
+
+pca_0 = PCA(n_components = 60) #initial dim reduction for faster MST computation (from tSNE paper)
+init_data = np.mat(pca_0.fit_transform(data))
+(M, P, k, lambda_, num_epochs, random_state, method) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
+synth_pca = PCA(n_components = 2)
+pca_init = np.mat(synth_pca.fit_transform(init_data))
 #####################################################
 
 def train():
@@ -77,10 +78,15 @@ def train():
 
     M = normalise(M)
 
-    epoch = 0
-    P_arr = optimize.minimize(calc_objective, np.array(P).reshape(-1), args = (M,k,lambda_, epoch), method = method, options = {'maxiter': num_epochs})
-    P_best = np.mat(P_arr.reshape(P.shape))
+    P_arr = optimize.minimize(calc_objective, np.array(P).reshape(-1), args = (M,k,lambda_), method = method, options = {'maxiter': num_epochs}, callback = log_callback)
+    P_best = np.mat(P_arr.x.reshape(P.shape))
     return P_best
+
+def log_callback(xk):
+    global epoch
+    print("epoch {0} --- \t negative loss: {1}".format(epoch, calc_objective(xk, M, k, lambda_)))
+    epoch +=1
+    return epoch > num_epochs
 
 if __name__ == '__main__':
     P_best = train()

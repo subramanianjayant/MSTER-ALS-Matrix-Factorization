@@ -7,13 +7,10 @@ import pandas as pd
 def H(n):
     return np.mat(np.identity(n)-(1/n)*np.ones((n,n)))
 
-def calc_objective(P, M, k, lambda_, epoch):
+def calc_objective(P, M, k, lambda_):
     P = np.mat(P.reshape(M.shape[1],-1))
     ratio, _, _, _, _ = LCR(M*P,k)
-    res = -1*(ratio - lambda_* loss_distance(M, P))
-    print("epoch {0} --- \t neg loss: {1}".format(epoch, res))
-    epoch+=1
-    return res
+    return -1*(ratio - lambda_* loss_distance(M, P))
 
 #Linkage Cost Ratio (Ward)
 def LCR(A, k):
