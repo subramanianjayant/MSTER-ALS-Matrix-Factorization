@@ -56,9 +56,10 @@ def LCR(A, k):
                 min = cost
                 A_index = i
                 B_index = j
-    A_ = np.array(temp_vals[A_index], dtype=np.int64)
-    B_ = np.array(temp_vals[B_index], dtype=np.int64)
-    ratio = (sum(C_)*sum(D_)*MergeCost(A, A_, B_))/(sum(A_)*sum(B_)*MergeCost(A, C_, D_))
+    A_ = np.array(temp_vals[A_index])
+    B_ = np.array(temp_vals[B_index])
+    # ratio = (sum(C_)*sum(D_)*MergeCost(A, A_, B_))/(sum(A_)*sum(B_)*MergeCost(A, C_, D_)) #balanced and imbalanced clusters treated the same
+    ratio = (4*sum(C_)*sum(D_)*MergeCost(A, A_, B_))/(((sum(A_)+sum(B_))**2)*MergeCost(A, C_, D_)) #favor balanced clusters
     return ratio, A_, B_, C_, D_
 
 def MergeCost(A, A_, B_):
@@ -66,10 +67,35 @@ def MergeCost(A, A_, B_):
     B_p = np.diag(B_)
     return np.asscalar(np.trace(B_p)*np.trace(A_p*A*A.T*A_p)+np.trace(A_p)*np.trace(B_p*A*A.T*B_p)-2*(A.T*A_p*np.mat(np.ones((len(A),1)))).T*(A.T*B_p*np.mat(np.ones((len(A),1)))))
 
-def loss(M, A, B, rA, lambda_, eta):
-    return (0.5*np.linalg.norm(M-A*B, ord = 'fro')**2
-                - lambda_*(rA)
-                - eta*(np.trace(H(M.shape[0])*A*A.T*H(M.shape[0]).T)))
+def pairwise_square_distance(A):
+    n = A.shape[0]
+    diag = np.zeros((n,n))
+    for i in range(n):
+        diag += (E(n,i) * A * A.T * E(n,i))
+    return np.mat(diag*np.mat(np.ones((n,n))) + (diag*np.mat(np.ones((n,n)))).T - 2*A*A.T)
+
+def E(n, i):
+    mat = np.zeros((n,n))
+    mat[i,i] = 1
+    return np.mat(mat)
+
+def normalise(A):
+    #divide by trace of covariance matrix
+    return 1e5 * np.mat(np.mat(A) / np.trace(np.mat(A).T * np.mat(A)))
+
+def loss(M, P, ratio, lambda_):
+    print(ratio, loss_distance(M,P))
+    return ratio - lambda_* loss_distance(M, P)
+
+def loss_distance(M, P):
+    A = M*P
+    n = M.shape[0]
+    return np.linalg.norm(pairwise_square_distance(A) - pairwise_square_distance(M), ord = 'fro')**2 / (n * (n-1))
+
+def distance_modifier(M, P):
+    A = M*P
+    n = M.shape[0]
+    return np.array(np.triu(np.ones((n,n))))
 
 # def grad(A, vert):
 #     mat = np.mat(np.zeros((A.shape)))
@@ -120,9 +146,11 @@ def loss(M, A, B, rA, lambda_, eta):
 #     #print(mat)
 #     return mat
 
-def grad(A, A_, B_, C_, D_):
+def grad(M, P, A_, B_, C_, D_, lambda_):
+    A = M*P
     mat = np.mat(np.zeros((A.shape)))
-    coeff = (sum(C_)*sum(D_))/(sum(A_)*sum(B_))
+    # coeff = (sum(C_)*sum(D_))/(sum(A_)*sum(B_)) #balanced and imbalanced clusters treated the same
+    coeff = (4*sum(C_)*sum(D_))/((sum(A_)+sum(B_))**2) #favor balanced clusters over imbalanced
     A_p = np.diag(A_)
     B_p = np.diag(B_)
     C_p = np.diag(C_)
@@ -130,7 +158,19 @@ def grad(A, A_, B_, C_, D_):
     n = len(A)
     temp1 = MergeCost(A, C_, D_)
     temp2 = MergeCost(A, A_, B_)
-    diff1 = 2*(sum(B_)*A_p*A_p.T+sum(A_)*B_p*B_p.T-B_p*np.ones((n,n))*A_p-A_p*np.ones((n,n))*B_p)*A
-    diff2 = 2*(sum(D_)*C_p*C_p.T+sum(C_)*D_p*D_p.T-D_p*np.ones((n,n))*C_p-C_p*np.ones((n,n))*D_p)*A
+    diff1 = 2*(sum(B_)*M.T*A_p*A_p.T*M+sum(A_)*M.T*B_p*B_p.T*M-M.T*B_p*np.ones((n,n))*A_p*M-M.T*A_p*np.ones((n,n))*B_p*M)*P
+    diff2 = 2*(sum(D_)*M.T*C_p*C_p.T*M+sum(C_)*M.T*D_p*D_p.T*M-M.T*D_p*np.ones((n,n))*C_p*M-M.T*C_p*np.ones((n,n))*D_p*M)*P
     mat = (temp1*diff1-temp2*diff2)/(temp2**2)
-    return coeff*mat
+    print(coeff*mat)
+    print(grad_distance(M,P))
+    return np.mat(coeff*mat - lambda_*grad_distance(M, P))
+
+def grad_distance(M, P):
+    A = M*P
+    n = M.shape[0]
+    coeff =  -4 / (n * (n-1))
+    sum1 = M.T * np.mat(np.diag(np.diag((pairwise_square_distance(M) - pairwise_square_distance(A)) * np.mat(np.ones((n,n)))))) * A
+    sum2 = M.T * np.mat(np.diag(np.diag(np.mat(np.ones((n,n))) * (pairwise_square_distance(M) - pairwise_square_distance(A))))) * A
+    term3 = 2 * M.T * (pairwise_square_distance(M) - pairwise_square_distance(A)) * A
+    grad = coeff * (sum1 + sum2 - term3)
+    return grad
