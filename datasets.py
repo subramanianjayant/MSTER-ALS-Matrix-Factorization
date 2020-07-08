@@ -172,19 +172,19 @@ if __name__ == "__main__":
 	# plt.figure(1)
 	# plt.scatter(x = np.array(_2d_clusters["normal"][k][0][:,0]), y = np.array(_2d_clusters["normal"][k][0][:,1]))
 	# plt.axis('equal')
-	
+
 	# plt.figure(2)
 	# plt.scatter(x = np.array(_2d_clusters["tight"][k][0][:,0]), y = np.array(_2d_clusters["tight"][k][0][:,1]))
 	# plt.axis('equal')
-	
+
 	# plt.figure(3)
 	# plt.scatter(x = np.array(_2d_clusters["loose"][k][0][:,0]), y = np.array(_2d_clusters["loose"][k][0][:,1]))
 	# plt.axis('equal')
-	
+
 	# plt.figure(4)
 	# plt.scatter(x = np.array(_2d_clusters["double"][k][0][:,0]), y = np.array(_2d_clusters["double"][k][0][:,1]))
 	# plt.axis('equal')
-	
+
 	# plt.figure(5)
 	# plt.scatter(x = np.array(_2d_clusters["imbalanced"][k][0][:,0]), y = np.array(_2d_clusters["imbalanced"][k][0][:,1]))
 	# plt.axis('equal')
