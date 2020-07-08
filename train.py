@@ -9,6 +9,7 @@ import pandas as pd
 from sklearn.decomposition import PCA
 import copy
 from termcolor import colored
+from scipy import optimize
 
 num_points = 200
 random_state = 1600
