@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.metrics import pairwise, normalized_mutual_info_score, adjusted_rand_score
 import networkx as nx
 from matplotlib import pyplot as plt
-from optimize.functions import LCR, loss, grad, H, normalise, calc_objective
+from optimize.functions import LCR, loss, grad, H, normalise, calc_objective, adam, VGA
 from sklearn.cluster import KMeans
 from config import MFConfig
 import pandas as pd
@@ -34,7 +34,7 @@ epoch = 1
 # init_data = np.mat(init_data)
 # synth_pca = PCA(n_components=2)
 # pca_init = synth_pca.fit_transform(init_data)
-# (M, P, k, lambda_, num_epochs, random_state, method) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
+# (M, P, k, lambda_, lr, num_epochs, random_state, method) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
 ##################################################
 
 ################### SAMPLE DATASET (GAUSSIAN CENTER DRAWS) ###########
@@ -52,7 +52,7 @@ epoch = 1
 # init_data = np.mat(init_data)
 # synth_pca = PCA(n_components=2)
 # pca_init = synth_pca.fit_transform(init_data)
-# (M, P, k, lambda_, num_epochs, random_state, method) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
+# (M, P, k, lambda_, lr, num_epochs, random_state, method) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
 #####################################################################
 
 ################## MNIST ###########################
@@ -67,19 +67,25 @@ data = np.mat(df.drop('class', axis=1))
 
 pca_0 = PCA(n_components = 30) #initial dim reduction for faster MST computation (from tSNE paper)
 init_data = np.mat(pca_0.fit_transform(data))
-(M, P, k, lambda_, num_epochs, random_state, method) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
+(M, P, k, lambda_, lr, num_epochs, random_state, method) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
 synth_pca = PCA(n_components = 2)
 pca_init = np.mat(synth_pca.fit_transform(init_data))
 #####################################################
 
 def train():
     assert num_clusters == len(desired_classes)
-    global M, P, k, lambda_, num_epochs, random_state, method
+    global M, P, k, lambda_, lr, num_epochs, random_state, method
 
     M = normalise(M)
 
-    P_arr = optimize.minimize(calc_objective, np.array(P).reshape(-1), args = (M,k,lambda_), method = method, options = {'maxiter': num_epochs}, callback = log_callback)
-    P_best = np.mat(P_arr.x.reshape(P.shape))
+    if method.lower() == 'adam':
+        P_best = adam((P, M, k, lambda_), num_epochs = num_epochs, alpha = lr)
+    elif method.lower() == 'gradient ascent':
+        P_best = VGA((P, M, k, lambda_), num_epochs = num_epochs, lr = lr)
+    else:
+        P_arr = optimize.minimize(calc_objective, np.array(P).reshape(-1), args = (M,k,lambda_), method = method, options = {'maxiter': num_epochs}, callback = log_callback)
+        P_best = np.mat(P_arr.x.reshape(P.shape))
+
     return P_best
 
 def log_callback(xk):

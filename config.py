@@ -25,21 +25,25 @@ class MFConfig:
         self.k = k #intended number of clusters in latent space
 
         # RANDOM INITIALIZATION
-        self.P = 10*np.mat(np.random.rand(self.m,self.d))
+        # self.P = 10*np.mat(np.random.rand(self.m,self.d))
 
         # PCA INITIALIZATION
-        # pca = PCA(n_components=self.d)
-        # pca.fit_transform(self.M)
-        # self.P = np.mat(pca.components_).T
+        pca = PCA(n_components=self.d)
+        pca.fit_transform(self.M)
+        self.P = np.mat(pca.components_).T
 
         print("P: {}".format(self.P.shape))
 
-        self.method = 'BFGS'
-        self.lambda_ = 1 #
-        self.num_epochs = 100 #number of epochs for gradient descent
+        self.method = 'adam'
+        # self.method = 'BFGS'
+        # self.method = 'gradient ascent'
+
+        self.lr = 0.001
+        self.lambda_ = 100 #
+        self.num_epochs = 50 #maximum number of epochs for optimization
 
     def dump(self):
         return (self.M, self.P, self.k,
-                self.lambda_,
+                self.lambda_, self.lr,
                 self.num_epochs,
                 self.random_state, self.method)

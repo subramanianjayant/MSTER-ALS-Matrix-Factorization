@@ -4,6 +4,52 @@ import networkx as nx
 from sklearn.cluster import AgglomerativeClustering
 import pandas as pd
 
+def adam(args, num_epochs = 100, alpha = 0.001, beta1 = 0.9, beta2 = 0.999, epsilon = 1e-8):
+    (P, M, k, lambda_) = args
+    m = np.mat(np.zeros(P.shape))
+    v = np.mat(np.zeros(P.shape))
+    t = 0
+    P_best = P
+    loss_best = -np.inf
+    while t < num_epochs:
+        best = ''
+        t += 1
+        ratio, A_, B_, C_, D_ = LCR(M*P, k)
+        loss_ = loss(M, P, ratio, lambda_)
+        if loss_ > loss_best:
+            P_best = P
+            loss_best = loss_
+            best = 'best'
+        print("epoch {0} --- \t loss: {1} --- \t LCR: {2} \t {3}".format(t, loss_, ratio, best))
+        g = grad(M, P, A_, B_, C_, D_, lambda_)
+        m = beta1*m+(1-beta1)*g
+        v = beta2*v+(1-beta2)*np.square(g)
+        m_hat = m/(1-(beta1**t))
+        v_hat = v/(1-(beta2**t))
+        P = P + np.divide(alpha*m_hat, np.sqrt(v_hat)+epsilon)
+    return P_best # for highest loss result
+    # return P # for latest result
+
+def VGA(args, num_epochs, lr = 0.01):
+    (P, M, k, lambda_) = args
+    t = 0
+    P_best = P
+    loss_best = -np.inf
+    while t < num_epochs:
+        best = ''
+        t += 1
+        ratio, A_, B_, C_, D_ = LCR(M*P, k)
+        loss_ = loss(M, P, ratio, lambda_)
+        if loss_ > loss_best:
+            P_best = P
+            loss_best = loss_
+            best = 'best'
+        print("epoch {0} --- \t loss: {1} --- \t LCR: {2} \t {3}".format(t, loss_, ratio, best))
+        g = grad(M, P, A_, B_, C_, D_, lambda_)
+        P = P + lr*g
+    return P_best # for highest loss result
+    # return P # for latest result
+
 def H(n):
     return np.mat(np.identity(n)-(1/n)*np.ones((n,n)))
 
@@ -72,10 +118,10 @@ def E(n, i):
 
 def normalise(A):
     #divide by trace of covariance matrix
-    return 1e5 * np.mat(np.mat(A) / np.trace(np.mat(A).T * np.mat(A)))
+    return 1e5*np.divide(np.mat(A), np.trace(np.mat(A).T * np.mat(A)))
 
 def loss(M, P, ratio, lambda_):
-    print(ratio, loss_distance(M,P))
+    #print(ratio, loss_distance(M,P))
     return ratio - lambda_* loss_distance(M, P)
 
 def loss_distance(M, P):
@@ -84,7 +130,8 @@ def loss_distance(M, P):
     return np.linalg.norm(distance_penalty(pairwise_square_distance(M)) - pairwise_square_distance(A), ord = 'fro')**2 / (n * (n-1))
 
 def distance_penalty(D): #function to penalize distances by
-    return np.exp(-1*D)
+    return D
+    # return np.exp(-1*D)
 
 def grad(M, P, A_, B_, C_, D_, lambda_):
     A = M*P
@@ -101,8 +148,6 @@ def grad(M, P, A_, B_, C_, D_, lambda_):
     diff1 = 2*(sum(B_)*M.T*A_p*A_p.T*M+sum(A_)*M.T*B_p*B_p.T*M-M.T*B_p*np.ones((n,n))*A_p*M-M.T*A_p*np.ones((n,n))*B_p*M)*P
     diff2 = 2*(sum(D_)*M.T*C_p*C_p.T*M+sum(C_)*M.T*D_p*D_p.T*M-M.T*D_p*np.ones((n,n))*C_p*M-M.T*C_p*np.ones((n,n))*D_p*M)*P
     mat = (temp1*diff1-temp2*diff2)/(temp2**2)
-    print(coeff*mat)
-    print(grad_distance(M,P))
     return np.mat(coeff*mat - lambda_*grad_distance(M, P))
 
 def grad_distance(M, P):
