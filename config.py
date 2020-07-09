@@ -35,8 +35,8 @@ class MFConfig:
         print("P: {}".format(self.P.shape))
 
         self.method = 'BFGS'
-        self.lambda_ = 0 #
-        self.num_epochs = 10 #number of epochs for gradient descent
+        self.lambda_ = 2 #
+        self.num_epochs = 5 #number of epochs for gradient descent
 
     def dump(self):
         return (self.M, self.P, self.k,

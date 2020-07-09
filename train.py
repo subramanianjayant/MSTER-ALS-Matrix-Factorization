@@ -65,7 +65,7 @@ df = df.sample(n=num_points, random_state=random_state)
 labels = np.array(df['class'])
 data = np.mat(df.drop('class', axis=1))
 
-pca_0 = PCA(n_components = 60) #initial dim reduction for faster MST computation (from tSNE paper)
+pca_0 = PCA(n_components = 30) #initial dim reduction for faster MST computation (from tSNE paper)
 init_data = np.mat(pca_0.fit_transform(data))
 (M, P, k, lambda_, num_epochs, random_state, method) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
 synth_pca = PCA(n_components = 2)
@@ -164,5 +164,5 @@ if __name__ == '__main__':
 
 
     print(colored("LCR Rand score: {} \n PCA Rand score: {}".format(score_MSTER, score_PCA), "green"))
-    print(colored("lr={} \t lambda={} \t rand_state={}".format(lr, lambda_, random_state), "blue"))
+    print(colored("method={} \t lambda={} \t rand_state={}".format(method, lambda_, random_state), "blue"))
     plt.show()
