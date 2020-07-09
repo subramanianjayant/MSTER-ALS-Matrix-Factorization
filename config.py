@@ -40,7 +40,7 @@ class MFConfig:
         self.lr = 10 #learning rate
         self.lr_decay = 0 #learning rate decay
 
-        self.lambda_ = 2 #
+        self.lambda_ = 0 #
         self.lambda_decay = 0
 
         self.num_epochs = 100 #number of epochs for gradient descent

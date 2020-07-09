@@ -84,7 +84,7 @@ def normalise(A):
     return 1e5 * np.mat(np.mat(A) / np.trace(np.mat(A).T * np.mat(A)))
 
 def loss(M, P, ratio, lambda_):
-    print(ratio, loss_distance(M,P))
+    # print(ratio, loss_distance(M,P))
     return ratio - lambda_* loss_distance(M, P)
 
 def loss_distance(M, P):
@@ -161,8 +161,8 @@ def grad(M, P, A_, B_, C_, D_, lambda_):
     diff1 = 2*(sum(B_)*M.T*A_p*A_p.T*M+sum(A_)*M.T*B_p*B_p.T*M-M.T*B_p*np.ones((n,n))*A_p*M-M.T*A_p*np.ones((n,n))*B_p*M)*P
     diff2 = 2*(sum(D_)*M.T*C_p*C_p.T*M+sum(C_)*M.T*D_p*D_p.T*M-M.T*D_p*np.ones((n,n))*C_p*M-M.T*C_p*np.ones((n,n))*D_p*M)*P
     mat = (temp1*diff1-temp2*diff2)/(temp2**2)
-    print(coeff*mat)
-    print(grad_distance(M,P))
+    # print(coeff*mat)
+    # print(grad_distance(M,P))
     return np.mat(coeff*mat - lambda_*grad_distance(M, P))
 
 def grad_distance(M, P):

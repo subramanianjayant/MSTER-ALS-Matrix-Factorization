@@ -108,10 +108,10 @@ def train():
             lr = lr*0.75
         lr -= lr_decay
 
-        print("epoch {0} --- \t loss: {1} \t {2}".format(epoch, loss_, best))
+        print("epoch {0} --- \t loss: {1} \t LCR: {3} \t {2}".format(epoch, loss_, best, ratio))
 
-    return P, loss_best #returns latest model
-    #return P_best #returns best model in terms of loss
+    return P_best, loss_best #returns best model
+    #return P, last_loss #returns latest model
 
 if __name__ == '__main__':
     P_best, loss_best = train()
