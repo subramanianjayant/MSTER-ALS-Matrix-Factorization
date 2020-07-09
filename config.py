@@ -38,8 +38,8 @@ class MFConfig:
         # self.method = 'BFGS'
         # self.method = 'gradient ascent'
 
-        self.lr = 0.001
-        self.lambda_ = 100 #
+        self.lr = 0.01
+        self.lambda_ = 5 #
         self.num_epochs = 50 #maximum number of epochs for optimization
 
     def dump(self):
