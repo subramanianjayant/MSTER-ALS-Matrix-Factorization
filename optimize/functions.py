@@ -81,12 +81,10 @@ def loss(M, P, ratio, lambda_):
 def loss_distance(M, P):
     A = M*P
     n = M.shape[0]
-    return np.linalg.norm(pairwise_square_distance(A) - pairwise_square_distance(M), ord = 'fro')**2 / (n * (n-1))
+    return np.linalg.norm(distance_penalty(pairwise_square_distance(M)) - pairwise_square_distance(A), ord = 'fro')**2 / (n * (n-1))
 
-def distance_modifier(M, P):
-    A = M*P
-    n = M.shape[0]
-    return np.array(np.triu(np.ones((n,n))))
+def distance_penalty(D): #function to penalize distances by
+    return np.exp(-1*D)
 
 def grad(M, P, A_, B_, C_, D_, lambda_):
     A = M*P
@@ -111,8 +109,8 @@ def grad_distance(M, P):
     A = M*P
     n = M.shape[0]
     coeff =  -4 / (n * (n-1))
-    sum1 = M.T * np.mat(np.diag(np.diag((pairwise_square_distance(M) - pairwise_square_distance(A)) * np.mat(np.ones((n,n)))))) * A
-    sum2 = M.T * np.mat(np.diag(np.diag(np.mat(np.ones((n,n))) * (pairwise_square_distance(M) - pairwise_square_distance(A))))) * A
-    term3 = 2 * M.T * (pairwise_square_distance(M) - pairwise_square_distance(A)) * A
+    sum1 = M.T * np.mat(np.diag(np.diag((distance_penalty(pairwise_square_distance(M)) - pairwise_square_distance(A)) * np.mat(np.ones((n,n)))))) * A
+    sum2 = M.T * np.mat(np.diag(np.diag(np.mat(np.ones((n,n))) * (distance_penalty(pairwise_square_distance(M)) - pairwise_square_distance(A))))) * A
+    term3 = 2 * M.T * (distance_penalty(pairwise_square_distance(M)) - pairwise_square_distance(A)) * A
     grad = coeff * (sum1 + sum2 - term3)
     return grad
