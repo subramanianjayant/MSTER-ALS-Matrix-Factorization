@@ -130,8 +130,8 @@ def loss_distance(M, P):
     return np.linalg.norm(distance_penalty(pairwise_square_distance(M)) - pairwise_square_distance(A), ord = 'fro')**2 / (n * (n-1))
 
 def distance_penalty(D): #function to penalize distances by
-    return D
-    # return np.exp(-1*D)
+    # return D
+    return np.exp(-1*D)
 
 def grad(M, P, A_, B_, C_, D_, lambda_):
     A = M*P

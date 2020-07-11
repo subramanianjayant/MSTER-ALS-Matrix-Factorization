@@ -39,8 +39,8 @@ class MFConfig:
         # self.method = 'gradient ascent'
 
         self.lr = 0.01
-        self.lambda_ = 5 #
-        self.num_epochs = 50 #maximum number of epochs for optimization
+        self.lambda_ = 1 #
+        self.num_epochs = 100 #maximum number of epochs for optimization
 
     def dump(self):
         return (self.M, self.P, self.k,
