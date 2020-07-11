@@ -92,22 +92,60 @@ epoch = 1
 # pca_init = np.mat(synth_pca.fit_transform(data))
 ####################################################
 
-################## MNIST ###########################
-DATASET = 'MNIST'
-desired_classes = [0,1,8]
+################## PROTEIN #########################
+# DATASET = 'PROTEIN'
+# desired_classes = ['A','B','E']
+# num_clusters = len(desired_classes)
+#
+# df = pd.read_csv('nmMDS_131d.csv', header = None)
+# labels = pd.read_csv('protein_labels.csv', header = None)
+# df['labels'] = np.array(labels[1])
+# df = df.loc[df['labels'].isin(desired_classes)]
+# if num_points < len(df):
+#     df = df.sample(n=num_points, random_state=random_state)
+# labels = np.array(df['labels'])
+# data = np.mat(df.drop('labels', axis=1))
+# (M, P, k, lambda_, lr, num_epochs, random_state, method) = MFConfig(M=data, k=num_clusters, seed = random_state).dump()
+# synth_pca = PCA(n_components = 2)
+# pca_init = np.mat(synth_pca.fit_transform(data))
+####################################################
+
+################## RADAR #########################
+DATASET = 'RADAR'
+desired_classes = ['B','G']
 num_clusters = len(desired_classes)
 
-df = pd.read_csv('mnist_784_zip/data/mnist_784_csv.csv')
-df = df.loc[df['class'].isin(desired_classes)]
-df = df.sample(n=num_points, random_state=random_state)
-labels = np.array(df['class'])
-data = np.mat(df.drop('class', axis=1))
-
+df = pd.read_csv('RADAR_mMDS_351d.csv', header = None)
+labels = pd.read_csv('radar_labels.csv', header = None)
+df['labels'] = np.array(labels[1])
+df = df.loc[df['labels'].isin(desired_classes)]
+if num_points < len(df):
+    df = df.sample(n=num_points, random_state=random_state)
+labels = np.array(df['labels'])
+data = np.mat(df.drop('labels', axis=1))
 pca_0 = PCA(n_components = 30) #initial dim reduction for faster MST computation (from tSNE paper)
 init_data = np.mat(pca_0.fit_transform(data))
 (M, P, k, lambda_, lr, num_epochs, random_state, method) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
 synth_pca = PCA(n_components = 2)
 pca_init = np.mat(synth_pca.fit_transform(init_data))
+####################################################
+
+################## MNIST ###########################
+# DATASET = 'MNIST'
+# desired_classes = [0,1,8]
+# num_clusters = len(desired_classes)
+#
+# df = pd.read_csv('mnist_784_zip/data/mnist_784_csv.csv')
+# df = df.loc[df['class'].isin(desired_classes)]
+# df = df.sample(n=num_points, random_state=random_state)
+# labels = np.array(df['class'])
+# data = np.mat(df.drop('class', axis=1))
+#
+# pca_0 = PCA(n_components = 30) #initial dim reduction for faster MST computation (from tSNE paper)
+# init_data = np.mat(pca_0.fit_transform(data))
+# (M, P, k, lambda_, lr, num_epochs, random_state, method) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
+# synth_pca = PCA(n_components = 2)
+# pca_init = np.mat(synth_pca.fit_transform(init_data))
 #####################################################
 
 def train():
@@ -162,59 +200,74 @@ if __name__ == '__main__':
     for i,row in enumerate(np.array(pca_init)):
         _dict2[labels[i]].append(row)
 
-    ### KMeans stuff
+    ## KMeans stuff
+    if num_clusters == len(desired_classes):
+        predictions_MSTER = KMeans(n_clusters = k, random_state = random_state).fit(A_best).labels_
+        predictions_PCA = KMeans(n_clusters = k, random_state = random_state).fit(pca_init).labels_
 
-    predictions_MSTER = KMeans(n_clusters = k, random_state = random_state).fit(A_best).labels_
-    predictions_PCA = KMeans(n_clusters = k, random_state = random_state).fit(pca_init).labels_
+        ### NMI
+        nmi_score_MSTER = normalized_mutual_info_score(labels, predictions_MSTER)
+        nmi_score_PCA = normalized_mutual_info_score(labels, predictions_PCA)
 
-    ### NMI
-    nmi_score_MSTER = normalized_mutual_info_score(labels, predictions_MSTER)
-    nmi_score_PCA = normalized_mutual_info_score(labels, predictions_PCA)
+        print(colored("LCR NMI score: {} \n PCA NMI score: {}".format(nmi_score_MSTER, nmi_score_PCA),"green"))
 
-    print(colored("LCR NMI score: {} \n PCA NMI score: {}".format(nmi_score_MSTER, nmi_score_PCA),"green"))
-
-    ### ARI
-    rand_score_MSTER = adjusted_rand_score(labels, predictions_MSTER)
-    rand_score_PCA = adjusted_rand_score(labels, predictions_PCA)
+        ### ARI
+        rand_score_MSTER = adjusted_rand_score(labels, predictions_MSTER)
+        rand_score_PCA = adjusted_rand_score(labels, predictions_PCA)
 
 
-    print(colored("LCR Rand score: {} \n PCA Rand score: {}".format(rand_score_MSTER, rand_score_PCA), "green"))
-    print(colored("method={} \t lambda={} \t rand_state={}".format(method, lambda_, random_state), "blue"))
+        print(colored("LCR Rand score: {} \n PCA Rand score: {}".format(rand_score_MSTER, rand_score_PCA), "green"))
+        print(colored("method={} \t lambda={} \t rand_state={}".format(method, lambda_, random_state), "blue"))
 
-    ### PLOTTING
+        ### PLOTTING
 
-    plt.figure(1)
-    plt.title('d=2 LCR Representation of {1} (n={0}, RAND={2}, NMI={3})'.format(num_points, DATASET, rand_score_MSTER, nmi_score_MSTER))
-    # print(_dict)
-    for i in _dict.keys():
-        plt.scatter(np.array(_dict[i])[:,0], np.array(_dict[i])[:,1], alpha=0.6)
-    plt.legend(desired_classes)
-    plt.savefig('figures/LCR_{1}_n={0}_RAND={2}_NMI={3})'.format(num_points, DATASET, rand_score_MSTER, nmi_score_MSTER))
+        plt.figure(1)
+        plt.title('d=2 LCR Representation of {1} (n={0}, RAND={2}, NMI={3})'.format(num_points, DATASET, rand_score_MSTER, nmi_score_MSTER))
+        # print(_dict)
+        for i in _dict.keys():
+            plt.scatter(np.array(_dict[i])[:,0], np.array(_dict[i])[:,1], alpha=0.6)
+        plt.legend(desired_classes)
+        plt.savefig('figures/LCR_{1}_n={0}_RAND={2}_NMI={3}.png'.format(num_points, DATASET, rand_score_MSTER, nmi_score_MSTER))
 
-    plt.figure(2)
-    plt.title('d=2 PCA Representation of {1} (n={0}, RAND={2}, NMI={3})'.format(num_points, DATASET, rand_score_PCA, nmi_score_PCA))
-    for i in _dict2.keys():
-        plt.scatter(np.array(_dict2[i])[:,0], np.array(_dict2[i])[:,1], alpha=0.6)
-    plt.legend(desired_classes)
-    plt.savefig('figures/PCA_{1}_n={0}_RAND={2}_NMI={3})'.format(num_points, DATASET, rand_score_PCA, nmi_score_PCA))
+        plt.figure(2)
+        plt.title('d=2 PCA Representation of {1} (n={0}, RAND={2}, NMI={3})'.format(num_points, DATASET, rand_score_PCA, nmi_score_PCA))
+        for i in _dict2.keys():
+            plt.scatter(np.array(_dict2[i])[:,0], np.array(_dict2[i])[:,1], alpha=0.6)
+        plt.legend(desired_classes)
+        plt.savefig('figures/PCA_{1}_n={0}_RAND={2}_NMI={3}.png'.format(num_points, DATASET, rand_score_PCA, nmi_score_PCA))
 
-    # plt.figure(3)
-    # plt.title('K-Means predictions for LCR')
-    # _dict3 = copy.deepcopy(base_kmeans)
-    # for i,row in enumerate(np.array(A_best)):
-    #     _dict3[predictions_MSTER[i]].append(row)
-    # for i in _dict3.keys():
-    #     plt.scatter(np.array(_dict3[i])[:,0], np.array(_dict3[i])[:,1], alpha=0.6)
-    # plt.legend(range(10))
-    #
-    # plt.figure(4)
-    # plt.title('K-Means predictions for PCA')
-    # _dict4 = copy.deepcopy(base_kmeans)
-    # for i,row in enumerate(np.array(pca_init)):
-    #     _dict4[predictions_PCA[i]].append(row)
-    # for i in _dict4.keys():
-    #     plt.scatter(np.array(_dict4[i])[:,0], np.array(_dict4[i])[:,1], alpha=0.6)
-    # plt.legend(range(10))
+        # plt.figure(3)
+        # plt.title('K-Means predictions for LCR')
+        # _dict3 = copy.deepcopy(base_kmeans)
+        # for i,row in enumerate(np.array(A_best)):
+        #     _dict3[predictions_MSTER[i]].append(row)
+        # for i in _dict3.keys():
+        #     plt.scatter(np.array(_dict3[i])[:,0], np.array(_dict3[i])[:,1], alpha=0.6)
+        # plt.legend(range(10))
+        #
+        # plt.figure(4)
+        # plt.title('K-Means predictions for PCA')
+        # _dict4 = copy.deepcopy(base_kmeans)
+        # for i,row in enumerate(np.array(pca_init)):
+        #     _dict4[predictions_PCA[i]].append(row)
+        # for i in _dict4.keys():
+        #     plt.scatter(np.array(_dict4[i])[:,0], np.array(_dict4[i])[:,1], alpha=0.6)
+        # plt.legend(range(10))
+    else:
+        plt.figure(1)
+        plt.title('d=2 LCR Representation of {1} (n={0}, k={2})'.format(num_points, DATASET, num_clusters))
+        # print(_dict)
+        for i in _dict.keys():
+            plt.scatter(np.array(_dict[i])[:,0], np.array(_dict[i])[:,1], alpha=0.6)
+        plt.legend(desired_classes)
+        plt.savefig('figures/PCA_{1}_n={0}_k={2})'.format(num_points, DATASET, num_clusters))
+
+        plt.figure(2)
+        plt.title('d=2 PCA Representation of {1} (n={0}, k={2})'.format(num_points, DATASET, num_clusters))
+        for i in _dict2.keys():
+            plt.scatter(np.array(_dict2[i])[:,0], np.array(_dict2[i])[:,1], alpha=0.6)
+        plt.legend(desired_classes)
+        plt.savefig('figures/PCA_{1}_n={0}_k={2})'.format(num_points, DATASET, num_clusters))
 
 
     plt.show()
