@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.metrics import pairwise, normalized_mutual_info_score, adjusted_rand_score
 import networkx as nx
 from matplotlib import pyplot as plt
-from optimize.functions import LCR, loss, grad, H, normalise, calc_objective, adam, VGA
+from optimize.functions import LCR, loss, grad, H, normalise, calc_objective, adam, VGA, nn_score
 from sklearn.cluster import KMeans
 from config import MFConfig
 import pandas as pd
@@ -111,41 +111,41 @@ epoch = 1
 ####################################################
 
 ################## RADAR #########################
-DATASET = 'RADAR'
-desired_classes = ['B','G']
-num_clusters = len(desired_classes)
-
-df = pd.read_csv('RADAR_mMDS_351d.csv', header = None)
-labels = pd.read_csv('radar_labels.csv', header = None)
-df['labels'] = np.array(labels[1])
-df = df.loc[df['labels'].isin(desired_classes)]
-if num_points < len(df):
-    df = df.sample(n=num_points, random_state=random_state)
-labels = np.array(df['labels'])
-data = np.mat(df.drop('labels', axis=1))
-pca_0 = PCA(n_components = 30) #initial dim reduction for faster MST computation (from tSNE paper)
-init_data = np.mat(pca_0.fit_transform(data))
-(M, P, k, lambda_, lr, num_epochs, random_state, method) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
-synth_pca = PCA(n_components = 2)
-pca_init = np.mat(synth_pca.fit_transform(init_data))
-####################################################
-
-################## MNIST ###########################
-# DATASET = 'MNIST'
-# desired_classes = [0,1,8]
+# DATASET = 'RADAR'
+# desired_classes = ['B','G']
 # num_clusters = len(desired_classes)
-#
-# df = pd.read_csv('mnist_784_zip/data/mnist_784_csv.csv')
-# df = df.loc[df['class'].isin(desired_classes)]
-# df = df.sample(n=num_points, random_state=random_state)
-# labels = np.array(df['class'])
-# data = np.mat(df.drop('class', axis=1))
-#
+
+# df = pd.read_csv('RADAR_mMDS_351d.csv', header = None)
+# labels = pd.read_csv('radar_labels.csv', header = None)
+# df['labels'] = np.array(labels[1])
+# df = df.loc[df['labels'].isin(desired_classes)]
+# if num_points < len(df):
+#     df = df.sample(n=num_points, random_state=random_state)
+# labels = np.array(df['labels'])
+# data = np.mat(df.drop('labels', axis=1))
 # pca_0 = PCA(n_components = 30) #initial dim reduction for faster MST computation (from tSNE paper)
 # init_data = np.mat(pca_0.fit_transform(data))
 # (M, P, k, lambda_, lr, num_epochs, random_state, method) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
 # synth_pca = PCA(n_components = 2)
 # pca_init = np.mat(synth_pca.fit_transform(init_data))
+####################################################
+
+################## MNIST ###########################
+DATASET = 'MNIST'
+desired_classes = [0,1,8]
+num_clusters = len(desired_classes)
+
+df = pd.read_csv('mnist_784_zip/data/mnist_784_csv.csv')
+df = df.loc[df['class'].isin(desired_classes)]
+df = df.sample(n=num_points, random_state=random_state)
+labels = np.array(df['class'])
+data = np.mat(df.drop('class', axis=1))
+
+pca_0 = PCA(n_components = 30) #initial dim reduction for faster MST computation (from tSNE paper)
+init_data = np.mat(pca_0.fit_transform(data))
+(M, P, k, lambda_, lr, num_epochs, random_state, method) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
+synth_pca = PCA(n_components = 2)
+pca_init = np.mat(synth_pca.fit_transform(init_data))
 #####################################################
 
 def train():
@@ -208,21 +208,25 @@ if __name__ == '__main__':
         ### NMI
         nmi_score_MSTER = normalized_mutual_info_score(labels, predictions_MSTER)
         nmi_score_PCA = normalized_mutual_info_score(labels, predictions_PCA)
-
         print(colored("LCR NMI score: {} \n PCA NMI score: {}".format(nmi_score_MSTER, nmi_score_PCA),"green"))
 
         ### ARI
         rand_score_MSTER = adjusted_rand_score(labels, predictions_MSTER)
         rand_score_PCA = adjusted_rand_score(labels, predictions_PCA)
-
-
         print(colored("LCR Rand score: {} \n PCA Rand score: {}".format(rand_score_MSTER, rand_score_PCA), "green"))
+        
+        ### NN purity score
+        nn_score_MSTER = nn_score(A_best, labels)
+        nn_score_PCA = nn_score(pca_init, labels)
+        print(colored("LCR NN score: {} \n PCA NN score: {}".format(nn_score_MSTER, nn_score_PCA), "green"))
+
+        ### Params
         print(colored("method={} \t lambda={} \t rand_state={}".format(method, lambda_, random_state), "blue"))
 
         ### PLOTTING
 
         plt.figure(1)
-        plt.title('d=2 LCR Representation of {1} (n={0}, RAND={2}, NMI={3})'.format(num_points, DATASET, rand_score_MSTER, nmi_score_MSTER))
+        plt.title('d=2 LCR Representation of {1} (n={0}, RAND={2}, NMI={3})'.format(num_points, DATASET, round(rand_score_MSTER,2), round(nmi_score_MSTER, 2)))
         # print(_dict)
         for i in _dict.keys():
             plt.scatter(np.array(_dict[i])[:,0], np.array(_dict[i])[:,1], alpha=0.6)
@@ -230,7 +234,7 @@ if __name__ == '__main__':
         plt.savefig('figures/LCR_{1}_n={0}_RAND={2}_NMI={3}.png'.format(num_points, DATASET, rand_score_MSTER, nmi_score_MSTER))
 
         plt.figure(2)
-        plt.title('d=2 PCA Representation of {1} (n={0}, RAND={2}, NMI={3})'.format(num_points, DATASET, rand_score_PCA, nmi_score_PCA))
+        plt.title('d=2 PCA Representation of {1} (n={0}, RAND={2}, NMI={3})'.format(num_points, DATASET, round(rand_score_PCA,2), round(nmi_score_PCA,2)))
         for i in _dict2.keys():
             plt.scatter(np.array(_dict2[i])[:,0], np.array(_dict2[i])[:,1], alpha=0.6)
         plt.legend(desired_classes)

@@ -2,3 +2,4 @@ mnist_784_zip/*
 *.pyc
 *.data
 *.csv
+test.py

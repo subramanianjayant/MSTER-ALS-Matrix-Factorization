@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.metrics import pairwise
 import networkx as nx
 from sklearn.cluster import AgglomerativeClustering
+from sklearn.neighbors import NearestNeighbors
 import pandas as pd
 
 def adam(args, num_epochs = 100, alpha = 0.001, beta1 = 0.9, beta2 = 0.999, epsilon = 1e-8):
@@ -159,3 +160,22 @@ def grad_distance(M, P):
     term3 = 2 * M.T * (distance_penalty(pairwise_square_distance(M)) - pairwise_square_distance(A)) * A
     grad = coeff * (sum1 + sum2 - term3)
     return grad
+
+# takes in a set of points and returns how pure the neirest neighbourhoods are; scaled from 0 (completely wrong) to 1 (completely correct)
+## args: np.mat, array/np.arr
+def nn_score(data, labels):
+    n = data.shape[0]
+    # set k as 10% of all the points
+    k = int(n/10)
+    score = 0
+    neigh = NearestNeighbors(n_neighbors = k)
+    neigh.fit(data)
+
+    score = 0
+    for i in range(n):
+        local_neigh = neigh.kneighbors(data[i], k, return_distance = False)
+        for neighbor in local_neigh[0]:
+            if labels[i] == labels[neighbor]:
+                score += 1
+
+    return score/(n * k)
