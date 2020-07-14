@@ -11,142 +11,17 @@ import copy
 from termcolor import colored
 from scipy import optimize
 
+DATASET = 'MNIST' #supports IRIS, WINE, MNIST, RADAR, PROTEIN, OCTAHEDRON
+desired_classes = [0,1,6]
+# desired_classes = ['Iris-setosa','Iris-versicolor','Iris-virginica']
 num_points = 200
 random_state = 1600
 np.random.seed(random_state)
+
+num_clusters = len(desired_classes)
 epoch = 1
 
-################## SAMPLE DATASET (OCTAHEDRON )################
-# from sklearn import datasets
-#
-# DATASET = 'octahedron'
-# num_dimensions = 20
-# desired_classes = [0,1,2,3,4,5]
-# num_clusters = len(desired_classes)
-#
-# arr = np.zeros((6 ,num_dimensions))
-# arr[0,0:3] = [5, 5, 0]
-# arr[1,0:3] = [5, -5, 0]
-# arr[2,0:3] = [-5, 5, 0]
-# arr[3,0:3] = [-5,-5, 0]
-# arr[4,0:3] = [0, 0, 5]
-# arr[5,0:3] = [0, 0, -5]
-# init_data, labels = datasets.make_blobs(n_samples=num_points, n_features=num_dimensions, centers = arr, cluster_std=0.6)
-# init_data = np.mat(init_data)
-# synth_pca = PCA(n_components=2)
-# pca_init = synth_pca.fit_transform(init_data)
-# (M, P, k, lambda_, lr, num_epochs, random_state, method) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
-##################################################
-
-################### SAMPLE DATASET (GAUSSIAN CENTER DRAWS) ###########
-# from sklearn import datasets
-#
-# DATASET = 'Gaussian Center Draws'
-# num_dimensions = 10
-# variance_ratio = 10000
-#
-# arr = np.zeros((num_clusters ,num_dimensions))
-#
-# for x in range(num_clusters):
-#     arr[x] = np.random.multivariate_normal(np.zeros(num_dimensions), (variance_ratio**0.5)*np.identity(num_dimensions))
-#
-# init_data, labels = datasets.make_blobs(n_samples=num_points, n_features=num_dimensions, centers = arr, cluster_std=1)
-# init_data = np.mat(init_data)
-# synth_pca = PCA(n_components=2)
-# pca_init = synth_pca.fit_transform(init_data)
-# (M, P, k, lambda_, lr, num_epochs, random_state, method) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
-#####################################################################
-
-################## IRIS ############################
-# DATASET = 'IRIS'
-# desired_classes = ['Iris-setosa','Iris-versicolor','Iris-virginica']
-# # desired_classes = ['Iris-versicolor','Iris-virginica']
-# num_clusters = len(desired_classes)
-#
-# df = pd.read_csv('iris.data', header = None)
-# df = df.loc[df[4].isin(desired_classes)]
-# if num_points < len(df):
-#     df = df.sample(n=num_points, random_state=random_state)
-# labels = np.array(df[4])
-# data = np.mat(df.drop(4, axis=1))
-# print(labels)
-# print(data)
-# synth_pca = PCA(n_components=2)
-# pca_init = synth_pca.fit_transform(data)
-# (M, P, k, lambda_, lr, num_epochs, random_state, method) = MFConfig(M=data, k=num_clusters, seed = random_state).dump()
-####################################################
-
-################## WINE ############################
-# DATASET = 'WINE'
-# desired_classes = [1,2,3]
-# num_clusters = len(desired_classes)
-#
-# df = pd.read_csv('wine.data', header = None)
-# df = df.loc[df[0].isin(desired_classes)]
-# if num_points < len(df):
-#     df = df.sample(n=num_points, random_state=random_state)
-# labels = np.array(df[0])
-# data = np.mat(df.drop(0, axis=1))
-# (M, P, k, lambda_, lr, num_epochs, random_state, method) = MFConfig(M=data, k=num_clusters, seed = random_state).dump()
-# synth_pca = PCA(n_components = 2)
-# pca_init = np.mat(synth_pca.fit_transform(data))
-####################################################
-
-################## PROTEIN #########################
-# DATASET = 'PROTEIN'
-# desired_classes = ['A','B','E']
-# num_clusters = len(desired_classes)
-#
-# df = pd.read_csv('nmMDS_131d.csv', header = None)
-# labels = pd.read_csv('protein_labels.csv', header = None)
-# df['labels'] = np.array(labels[1])
-# df = df.loc[df['labels'].isin(desired_classes)]
-# if num_points < len(df):
-#     df = df.sample(n=num_points, random_state=random_state)
-# labels = np.array(df['labels'])
-# data = np.mat(df.drop('labels', axis=1))
-# (M, P, k, lambda_, lr, num_epochs, random_state, method) = MFConfig(M=data, k=num_clusters, seed = random_state).dump()
-# synth_pca = PCA(n_components = 2)
-# pca_init = np.mat(synth_pca.fit_transform(data))
-####################################################
-
-################## RADAR #########################
-# DATASET = 'RADAR'
-# desired_classes = ['B','G']
-# num_clusters = len(desired_classes)
-
-# df = pd.read_csv('RADAR_mMDS_351d.csv', header = None)
-# labels = pd.read_csv('radar_labels.csv', header = None)
-# df['labels'] = np.array(labels[1])
-# df = df.loc[df['labels'].isin(desired_classes)]
-# if num_points < len(df):
-#     df = df.sample(n=num_points, random_state=random_state)
-# labels = np.array(df['labels'])
-# data = np.mat(df.drop('labels', axis=1))
-# pca_0 = PCA(n_components = 30) #initial dim reduction for faster MST computation (from tSNE paper)
-# init_data = np.mat(pca_0.fit_transform(data))
-# (M, P, k, lambda_, lr, num_epochs, random_state, method) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
-# synth_pca = PCA(n_components = 2)
-# pca_init = np.mat(synth_pca.fit_transform(init_data))
-####################################################
-
-################## MNIST ###########################
-DATASET = 'MNIST'
-desired_classes = [0,1,8]
-num_clusters = len(desired_classes)
-
-df = pd.read_csv('mnist_784_zip/data/mnist_784_csv.csv')
-df = df.loc[df['class'].isin(desired_classes)]
-df = df.sample(n=num_points, random_state=random_state)
-labels = np.array(df['class'])
-data = np.mat(df.drop('class', axis=1))
-
-pca_0 = PCA(n_components = 30) #initial dim reduction for faster MST computation (from tSNE paper)
-init_data = np.mat(pca_0.fit_transform(data))
-(M, P, k, lambda_, lr, num_epochs, random_state, method) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
-synth_pca = PCA(n_components = 2)
-pca_init = np.mat(synth_pca.fit_transform(init_data))
-#####################################################
+(M, P, k, lambda_, lr, num_epochs, random_state, method, pca_init, labels) = MFConfig(dataset=DATASET, desired_classes=desired_classes, k=num_clusters, num_points=num_points, seed=random_state).dump()
 
 def train():
     #assert num_clusters == len(desired_classes)
@@ -214,7 +89,7 @@ if __name__ == '__main__':
         rand_score_MSTER = adjusted_rand_score(labels, predictions_MSTER)
         rand_score_PCA = adjusted_rand_score(labels, predictions_PCA)
         print(colored("LCR Rand score: {} \n PCA Rand score: {}".format(rand_score_MSTER, rand_score_PCA), "green"))
-        
+
         ### NN purity score
         nn_score_MSTER = nn_score(A_best, labels)
         nn_score_PCA = nn_score(pca_init, labels)
