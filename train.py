@@ -12,7 +12,7 @@ from termcolor import colored
 from scipy import optimize
 
 DATASET = 'MNIST' #supports IRIS, WINE, MNIST, RADAR, PROTEIN, OCTAHEDRON
-desired_classes = [0,1,6]
+desired_classes = [0,1,8]
 # desired_classes = ['Iris-setosa','Iris-versicolor','Iris-virginica']
 num_points = 200
 random_state = 1600
@@ -106,14 +106,14 @@ if __name__ == '__main__':
         for i in _dict.keys():
             plt.scatter(np.array(_dict[i])[:,0], np.array(_dict[i])[:,1], alpha=0.6)
         plt.legend(desired_classes)
-        plt.savefig('figures/LCR_{1}_n={0}_RAND={2}_NMI={3}.png'.format(num_points, DATASET, rand_score_MSTER, nmi_score_MSTER))
+        plt.savefig('figures/LCR_{1}_n={0}_classes={2}.png'.format(num_points, DATASET, str(desired_classes)))
 
         plt.figure(2)
         plt.title('d=2 PCA Representation of {1} (n={0}, RAND={2}, NMI={3})'.format(num_points, DATASET, round(rand_score_PCA,2), round(nmi_score_PCA,2)))
         for i in _dict2.keys():
             plt.scatter(np.array(_dict2[i])[:,0], np.array(_dict2[i])[:,1], alpha=0.6)
         plt.legend(desired_classes)
-        plt.savefig('figures/PCA_{1}_n={0}_RAND={2}_NMI={3}.png'.format(num_points, DATASET, rand_score_PCA, nmi_score_PCA))
+        plt.savefig('figures/PCA_{1}_n={0}_classes={2}.png'.format(num_points, DATASET, str(desired_classes)))
 
         # plt.figure(3)
         # plt.title('K-Means predictions for LCR')

@@ -15,14 +15,14 @@ def adam(args, num_epochs = 100, alpha = 0.001, beta1 = 0.9, beta2 = 0.999, epsi
     while t < num_epochs:
         best = ''
         t += 1
-        ratio, A_, B_, C_, D_ = LCR(M*P, k)
+        ratio, C_, D_ = LCR(M*P, k)
         loss_ = loss(M, P, ratio, lambda_)
         if loss_ > loss_best:
             P_best = P
             loss_best = loss_
             best = 'best'
         print("epoch {0} --- \t loss: {1} --- \t LCR: {2} \t {3}".format(t, loss_, ratio, best))
-        g = grad(M, P, A_, B_, C_, D_, lambda_)
+        g = grad(M, P, C_, D_, lambda_)
         m = beta1*m+(1-beta1)*g
         v = beta2*v+(1-beta2)*np.square(g)
         m_hat = m/(1-(beta1**t))
@@ -39,14 +39,14 @@ def VGA(args, num_epochs, lr = 0.01):
     while t < num_epochs:
         best = ''
         t += 1
-        ratio, A_, B_, C_, D_ = LCR(M*P, k)
+        ratio, C_, D_ = LCR(M*P, k)
         loss_ = loss(M, P, ratio, lambda_)
         if loss_ > loss_best:
             P_best = P
             loss_best = loss_
             best = 'best'
         print("epoch {0} --- \t loss: {1} --- \t LCR: {2} \t {3}".format(t, loss_, ratio, best))
-        g = grad(M, P, A_, B_, C_, D_, lambda_)
+        g = grad(M, P, C_, D_, lambda_)
         P = P + lr*g
     return P_best # for highest loss result
     # return P # for latest result
@@ -61,7 +61,7 @@ def calc_objective(P, M, k, lambda_):
 
 #Linkage Cost Ratio (Ward)
 def LCR(A, k):
-    agc = AgglomerativeClustering(n_clusters=k+1, linkage='ward').fit(A)
+    agc = AgglomerativeClustering(n_clusters=k, linkage='ward').fit(A)
     temp_vals = pd.get_dummies(pd.Series(agc.labels_))
     min = np.inf
     C_index = 0
@@ -77,28 +77,8 @@ def LCR(A, k):
                 D_index = j
     C_ = np.array(temp_vals[C_index])
     D_ = np.array(temp_vals[D_index])
-
-    temp_vals['new'] = temp_vals[C_index]+temp_vals[D_index]
-    temp_vals = temp_vals.drop([C_index, D_index], axis=1)
-    temp_vals = temp_vals.rename(columns={x:y for x,y in zip(temp_vals.columns,range(0,len(temp_vals.columns)))})
-    #print(temp_vals)
-    min = np.inf
-    A_index = 0
-    B_index = 0
-    for i in range(len(temp_vals.columns)):
-        for j in range(i+1,len(temp_vals.columns)):
-            P_ = np.array(temp_vals[i])
-            Q_ = np.array(temp_vals[j])
-            cost = MergeCost(A, P_, Q_)/(sum(P_)*sum(Q_))
-            if  cost < min:
-                min = cost
-                A_index = i
-                B_index = j
-    A_ = np.array(temp_vals[A_index])
-    B_ = np.array(temp_vals[B_index])
-    # ratio = (sum(C_)*sum(D_)*MergeCost(A, A_, B_))/(sum(A_)*sum(B_)*MergeCost(A, C_, D_)) #balanced and imbalanced clusters treated the same
-    ratio = (4*sum(C_)*sum(D_)*MergeCost(A, A_, B_))/(((sum(A_)+sum(B_))**2)*MergeCost(A, C_, D_)) #favor balanced clusters
-    return ratio, A_, B_, C_, D_
+    ratio = MergeCost(A, C_, D_)/(np.trace(A*A.T)) #favor balanced clusters
+    return ratio, C_, D_
 
 def MergeCost(A, A_, B_):
     A_p = np.diag(A_)
@@ -119,7 +99,7 @@ def E(n, i):
 
 def normalise(A):
     #divide by trace of covariance matrix
-    return 1e5*np.divide(np.mat(A), np.trace(np.mat(A).T * np.mat(A)))
+    return 1e5*np.divide(np.mat(A), np.trace(np.mat(A) * np.mat(A).T))
 
 def loss(M, P, ratio, lambda_):
     #print(ratio, loss_distance(M,P))
@@ -134,20 +114,17 @@ def distance_penalty(D): #function to penalize distances by
     # return D
     return np.exp(-1*D)
 
-def grad(M, P, A_, B_, C_, D_, lambda_):
+def grad(M, P, C_, D_, lambda_):
     A = M*P
     mat = np.mat(np.zeros((A.shape)))
-    # coeff = (sum(C_)*sum(D_))/(sum(A_)*sum(B_)) #balanced and imbalanced clusters treated the same
-    coeff = (4*sum(C_)*sum(D_))/((sum(A_)+sum(B_))**2) #favor balanced clusters over imbalanced
-    A_p = np.diag(A_)
-    B_p = np.diag(B_)
+    coeff = 1 #favor balanced clusters over imbalanced
     C_p = np.diag(C_)
     D_p = np.diag(D_)
     n = len(A)
-    temp1 = MergeCost(A, C_, D_)
-    temp2 = MergeCost(A, A_, B_)
-    diff1 = 2*(sum(B_)*M.T*A_p*A_p.T*M+sum(A_)*M.T*B_p*B_p.T*M-M.T*B_p*np.ones((n,n))*A_p*M-M.T*A_p*np.ones((n,n))*B_p*M)*P
-    diff2 = 2*(sum(D_)*M.T*C_p*C_p.T*M+sum(C_)*M.T*D_p*D_p.T*M-M.T*D_p*np.ones((n,n))*C_p*M-M.T*C_p*np.ones((n,n))*D_p*M)*P
+    temp1 = np.trace(A*A.T)
+    temp2 = MergeCost(A, C_, D_)
+    diff1 = 2*(sum(D_)*M.T*C_p*C_p.T*M+sum(C_)*M.T*D_p*D_p.T*M-M.T*D_p*np.ones((n,n))*C_p*M-M.T*C_p*np.ones((n,n))*D_p*M)*P
+    diff2 = 2*M.T*M*P
     mat = (temp1*diff1-temp2*diff2)/(temp2**2)
     return np.mat(coeff*mat - lambda_*grad_distance(M, P))
 
