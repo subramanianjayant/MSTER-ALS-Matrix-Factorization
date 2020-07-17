@@ -153,16 +153,10 @@ if __name__ == "__main__":
 	for k in range(2,7):
 		print(colored("{} clusters".format(k), "green"))
 		print("Normal: {}".format(LCR(_2d_clusters["normal"][k][0],k)[0]))
-	# 	print("Tight: {}".format(LCR(_2d_clusters["tight"][k][0],k)[0]))
-	# 	print("loose: {}".format(LCR(_2d_clusters["loose"][k][0],k)[0]))
-	# 	print("Double: {}".format(LCR(_2d_clusters["double"][k][0],k)[0]))
-	# 	print("Imbalanced: {}\n\n".format(LCR(_2d_clusters["imbalanced"][k][0],k)[0]))
-
-		# print("Normal: {}".format(LCR(simplexes["normal"][k][0],k)[0]))
-	# 	print("Tight: {}".format(LCR(_2d_clusters["tight"][k][0],k)[0]))
-	# 	print("loose: {}".format(LCR(_2d_clusters["loose"][k][0],k)[0]))
-	# 	print("Double: {}".format(LCR(_2d_clusters["double"][k][0],k)[0]))
-	# 	print("Imbalanced: {}\n\n".format(LCR(_2d_clusters["imbalanced"][k][0],k)[0]))
+		print("Tight: {}".format(LCR(_2d_clusters["tight"][k][0],k)[0]))
+		print("loose: {}".format(LCR(_2d_clusters["loose"][k][0],k)[0]))
+		print("Double: {}".format(LCR(_2d_clusters["double"][k][0],k)[0]))
+		print("Imbalanced: {}\n\n".format(LCR(_2d_clusters["imbalanced"][k][0],k)[0]))
 
 	# k = 6
 
