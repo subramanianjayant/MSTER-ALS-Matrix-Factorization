@@ -11,8 +11,8 @@ import copy
 from termcolor import colored
 from scipy import optimize
 
-DATASET = 'MNIST' #supports IRIS, WINE, MNIST, RADAR, PROTEIN, OCTAHEDRON
-desired_classes = [0,1,8]
+DATASET = 'WINE' #supports IRIS, WINE, MNIST, RADAR, PROTEIN, OCTAHEDRON
+desired_classes = [1,2,3]
 # desired_classes = ['Iris-setosa','Iris-versicolor','Iris-virginica']
 num_points = 200
 random_state = 1600
@@ -91,9 +91,9 @@ if __name__ == '__main__':
         print(colored("LCR Rand score: {} \n PCA Rand score: {}".format(rand_score_MSTER, rand_score_PCA), "green"))
 
         ### NN purity score
-        nn_score_MSTER = nn_score(A_best, labels)
-        nn_score_PCA = nn_score(pca_init, labels)
-        print(colored("LCR NN score: {} \n PCA NN score: {}".format(nn_score_MSTER, nn_score_PCA), "green"))
+        # nn_score_MSTER = nn_score(A_best, labels)
+        # nn_score_PCA = nn_score(pca_init, labels)
+        # print(colored("LCR NN score: {} \n PCA NN score: {}".format(nn_score_MSTER, nn_score_PCA), "green"))
 
         ### Params
         print(colored("method={} \t lambda={} \t rand_state={}".format(method, lambda_, random_state), "blue"))

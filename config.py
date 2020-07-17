@@ -49,6 +49,7 @@ class MFConfig:
             data = np.mat(df.drop('labels', axis=1))
             pca_0 = PCA(n_components = 30) #initial dim reduction for faster MST computation (from tSNE paper)
             init_data = np.mat(pca_0.fit_transform(data))
+            synth_pca = PCA(n_components = 2)
             pca_init = np.mat(synth_pca.fit_transform(init_data))
             self.M = init_data
             self.pca_init = pca_init
