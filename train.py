@@ -31,7 +31,7 @@ epoch = 1
 # arr[3,0:3] = [-5,-5, 0]
 # arr[4,0:3] = [0, 0, 5]
 # arr[5,0:3] = [0, 0, -5]
-# init_data, labels = datasets.make_blobs(n_samples=num_points, n_features=num_dimensions, centers = arr, cluster_std=0.6)
+# init_data, labels = datasets.make_blobs(n_samples=num_points, n_features=num_dimensions, centers = arr, cluster_std=0.2)
 # init_data = np.mat(init_data)
 # synth_pca = PCA(n_components=2)
 # pca_init = synth_pca.fit_transform(init_data)
@@ -58,27 +58,27 @@ epoch = 1
 #####################################################################
 
 ################## IRIS ############################
-# DATASET = 'IRIS'
-# desired_classes = ['Iris-setosa','Iris-versicolor','Iris-virginica']
-# # desired_classes = ['Iris-versicolor','Iris-virginica']
-# num_clusters = len(desired_classes)
-#
-# df = pd.read_csv('iris.data', header = None)
-# df = df.loc[df[4].isin(desired_classes)]
-# if num_points < len(df):
-#     df = df.sample(n=num_points, random_state=random_state)
-# labels = np.array(df[4])
-# data = np.mat(df.drop(4, axis=1))
-# print(labels)
-# print(data)
-# synth_pca = PCA(n_components=2)
-# pca_init = synth_pca.fit_transform(data)
-# (M, P, k, lambda_, lr, num_epochs, random_state, method) = MFConfig(M=data, k=num_clusters, seed = random_state).dump()
+DATASET = 'IRIS'
+desired_classes = ['Iris-setosa','Iris-versicolor','Iris-virginica']
+# desired_classes = ['Iris-versicolor','Iris-virginica']
+num_clusters = len(desired_classes)
+
+df = pd.read_csv('iris.data', header = None)
+df = df.loc[df[4].isin(desired_classes)]
+if num_points < len(df):
+    df = df.sample(n=num_points, random_state=random_state)
+labels = np.array(df[4])
+data = np.mat(df.drop(4, axis=1))
+print(labels)
+print(data)
+synth_pca = PCA(n_components=2)
+pca_init = synth_pca.fit_transform(data)
+(M, P, k, lambda_, lr, num_epochs, random_state, method) = MFConfig(M=data, k=num_clusters, seed = random_state).dump()
 ####################################################
 
 ################## WINE ############################
 # DATASET = 'WINE'
-# desired_classes = [1,2,3]
+# desired_classes = [2,3]
 # num_clusters = len(desired_classes)
 #
 # df = pd.read_csv('wine.data', header = None)
@@ -114,7 +114,7 @@ epoch = 1
 # DATASET = 'RADAR'
 # desired_classes = ['B','G']
 # num_clusters = len(desired_classes)
-
+#
 # df = pd.read_csv('RADAR_mMDS_351d.csv', header = None)
 # labels = pd.read_csv('radar_labels.csv', header = None)
 # df['labels'] = np.array(labels[1])
@@ -131,21 +131,21 @@ epoch = 1
 ####################################################
 
 ################## MNIST ###########################
-DATASET = 'MNIST'
-desired_classes = [0,1,8]
-num_clusters = len(desired_classes)
-
-df = pd.read_csv('mnist_784_zip/data/mnist_784_csv.csv')
-df = df.loc[df['class'].isin(desired_classes)]
-df = df.sample(n=num_points, random_state=random_state)
-labels = np.array(df['class'])
-data = np.mat(df.drop('class', axis=1))
-
-pca_0 = PCA(n_components = 30) #initial dim reduction for faster MST computation (from tSNE paper)
-init_data = np.mat(pca_0.fit_transform(data))
-(M, P, k, lambda_, lr, num_epochs, random_state, method) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
-synth_pca = PCA(n_components = 2)
-pca_init = np.mat(synth_pca.fit_transform(init_data))
+# DATASET = 'MNIST'
+# desired_classes = [0,1,6]
+# num_clusters = len(desired_classes)
+#
+# df = pd.read_csv('mnist_784_zip/data/mnist_784_csv.csv')
+# df = df.loc[df['class'].isin(desired_classes)]
+# df = df.sample(n=num_points, random_state=random_state)
+# labels = np.array(df['class'])
+# data = np.mat(df.drop('class', axis=1))
+#
+# pca_0 = PCA(n_components = 30) #initial dim reduction for faster MST computation (from tSNE paper)
+# init_data = np.mat(pca_0.fit_transform(data))
+# (M, P, k, lambda_, lr, num_epochs, random_state, method) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
+# synth_pca = PCA(n_components = 2)
+# pca_init = np.mat(synth_pca.fit_transform(init_data))
 #####################################################
 
 def train():
@@ -214,11 +214,11 @@ if __name__ == '__main__':
         rand_score_MSTER = adjusted_rand_score(labels, predictions_MSTER)
         rand_score_PCA = adjusted_rand_score(labels, predictions_PCA)
         print(colored("LCR Rand score: {} \n PCA Rand score: {}".format(rand_score_MSTER, rand_score_PCA), "green"))
-        
+
         ### NN purity score
-        nn_score_MSTER = nn_score(A_best, labels)
-        nn_score_PCA = nn_score(pca_init, labels)
-        print(colored("LCR NN score: {} \n PCA NN score: {}".format(nn_score_MSTER, nn_score_PCA), "green"))
+        # nn_score_MSTER = nn_score(A_best, labels)
+        # nn_score_PCA = nn_score(pca_init, labels)
+        # print(colored("LCR NN score: {} \n PCA NN score: {}".format(nn_score_MSTER, nn_score_PCA), "green"))
 
         ### Params
         print(colored("method={} \t lambda={} \t rand_state={}".format(method, lambda_, random_state), "blue"))
