@@ -10,11 +10,27 @@ from sklearn.decomposition import PCA
 import copy
 from termcolor import colored
 from scipy import optimize
+from datasets import datasets
 
-num_points = 200
+num_points = 150
 random_state = 1600
 np.random.seed(random_state)
 epoch = 1
+
+################## DATASETS.PY DATASETS #####################
+DATASET = 'SYNTHETIC'
+desired_classes = [0,1,2]
+num_clusters = len(desired_classes)
+_2d_clusters, simplexes, polyhedra = datasets(imbalance_ratio=10, n = num_points).get_datasets()
+init_data = _2d_clusters["loose"][3][0]
+synth_pca = PCA(n_components=2)
+pca_init = synth_pca.fit_transform(init_data)
+(M, P, k, lambda_, lr, num_epochs, random_state, method) = MFConfig(M=init_data, k=num_clusters, seed = random_state).dump()
+M = init_data
+P = np.mat([[1,0],[0,1]])
+labels = np.zeros(num_points)
+#############################################################
+
 
 ################## SAMPLE DATASET (OCTAHEDRON )################
 # from sklearn import datasets
@@ -58,22 +74,22 @@ epoch = 1
 #####################################################################
 
 ################## IRIS ############################
-DATASET = 'IRIS'
-desired_classes = ['Iris-setosa','Iris-versicolor','Iris-virginica']
-# desired_classes = ['Iris-versicolor','Iris-virginica']
-num_clusters = len(desired_classes)
-
-df = pd.read_csv('iris.data', header = None)
-df = df.loc[df[4].isin(desired_classes)]
-if num_points < len(df):
-    df = df.sample(n=num_points, random_state=random_state)
-labels = np.array(df[4])
-data = np.mat(df.drop(4, axis=1))
-print(labels)
-print(data)
-synth_pca = PCA(n_components=2)
-pca_init = synth_pca.fit_transform(data)
-(M, P, k, lambda_, lr, num_epochs, random_state, method) = MFConfig(M=data, k=num_clusters, seed = random_state).dump()
+# DATASET = 'IRIS'
+# desired_classes = ['Iris-setosa','Iris-versicolor','Iris-virginica']
+# # desired_classes = ['Iris-versicolor','Iris-virginica']
+# num_clusters = len(desired_classes)
+#
+# df = pd.read_csv('iris.data', header = None)
+# df = df.loc[df[4].isin(desired_classes)]
+# if num_points < len(df):
+#     df = df.sample(n=num_points, random_state=random_state)
+# labels = np.array(df[4])
+# data = np.mat(df.drop(4, axis=1))
+# print(labels)
+# print(data)
+# synth_pca = PCA(n_components=2)
+# pca_init = synth_pca.fit_transform(data)
+# (M, P, k, lambda_, lr, num_epochs, random_state, method) = MFConfig(M=data, k=num_clusters, seed = random_state).dump()
 ####################################################
 
 ################## WINE ############################
@@ -151,18 +167,18 @@ pca_init = synth_pca.fit_transform(data)
 def train():
     #assert num_clusters == len(desired_classes)
     global M, P, k, lambda_, lr, num_epochs, random_state, method
-
+    loss_best = 0
     M = normalise(M)
 
     if method.lower() == 'adam':
-        P_best = adam((P, M, k, lambda_), num_epochs = num_epochs, alpha = lr)
+        P_best, loss_best = adam((P, M, k, lambda_), num_epochs = num_epochs, alpha = lr)
     elif method.lower() == 'gradient ascent':
         P_best = VGA((P, M, k, lambda_), num_epochs = num_epochs, lr = lr)
     else:
         P_arr = optimize.minimize(calc_objective, np.array(P).reshape(-1), args = (M,k,lambda_), method = method, options = {'maxiter': num_epochs}, callback = log_callback)
         P_best = np.mat(P_arr.x.reshape(P.shape))
 
-    return P_best
+    return P_best, loss_best
 
 def log_callback(xk):
     global epoch
@@ -171,16 +187,24 @@ def log_callback(xk):
     return epoch > num_epochs
 
 if __name__ == '__main__':
-    P_best = train()
+    P_best, loss_best = train()
     A_best = M*P_best
-    np.savetxt("{}_proj_data.csv".format(DATASET), A_best, delimiter=",")
+    # np.savetxt("{}_proj_data.csv".format(DATASET), A_best, delimiter=",")
 
     ### Dim Reduction
 
-    ############## SAMPLE DATASETS ###############
-    # base = {0: [], 1: [], 2: [], 3: [], 4: [], 5:[]}
-    # base_kmeans = {0: [], 1: [], 2: [], 3: [], 4: [], 5:[]}
-    # legend = [0,1,2,3,4,5]
+    ############## SYNTH DATASETS UNCOMMENT ###############
+    plt.figure(0)
+    plt.axis('equal')
+    plt.scatter(np.array(init_data[:,0]).reshape(-1), np.array(init_data[:,1]).reshape(-1))
+    plt.title('d=2 Initial Representation of {1} (n={0}, k={2}, cost={3})'.format(num_points, DATASET, num_clusters, LCR(init_data, 3)[0]))
+
+    plt.figure(1)
+    plt.axis('equal')
+    plt.scatter(np.array(A_best[:,0]).reshape(-1), np.array(A_best[:,1]).reshape(-1))
+    plt.title('d=2 LCR Representation of {1} (n={0}, k={2}, cost={3})'.format(num_points, DATASET, num_clusters, loss_best))
+    plt.show()
+    exit(1)
     ################################################
 
     ############### MNIST #########################
@@ -259,7 +283,7 @@ if __name__ == '__main__':
         # plt.legend(range(10))
     else:
         plt.figure(1)
-        plt.title('d=2 LCR Representation of {1} (n={0}, k={2})'.format(num_points, DATASET, num_clusters))
+        plt.title('d=2 LCR Representation of {1} (n={0}, k={2}, cost={3})'.format(num_points, DATASET, num_clusters, loss_best))
         # print(_dict)
         for i in _dict.keys():
             plt.scatter(np.array(_dict[i])[:,0], np.array(_dict[i])[:,1], alpha=0.6)
@@ -267,7 +291,7 @@ if __name__ == '__main__':
         plt.savefig('figures/PCA_{1}_n={0}_k={2})'.format(num_points, DATASET, num_clusters))
 
         plt.figure(2)
-        plt.title('d=2 PCA Representation of {1} (n={0}, k={2})'.format(num_points, DATASET, num_clusters))
+        plt.title('d=2 PCA Representation of {1} (n={0}, k={2}, cost={3})'.format(num_points, DATASET, num_clusters, loss_best))
         for i in _dict2.keys():
             plt.scatter(np.array(_dict2[i])[:,0], np.array(_dict2[i])[:,1], alpha=0.6)
         plt.legend(desired_classes)

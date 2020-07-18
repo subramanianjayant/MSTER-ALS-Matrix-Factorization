@@ -28,7 +28,7 @@ def adam(args, num_epochs = 100, alpha = 0.001, beta1 = 0.9, beta2 = 0.999, epsi
         m_hat = m/(1-(beta1**t))
         v_hat = v/(1-(beta2**t))
         P = P + np.divide(alpha*m_hat, np.sqrt(v_hat)+epsilon)
-    return P_best # for highest loss result
+    return P_best, loss_best # for highest loss result
     # return P # for latest result
 
 def VGA(args, num_epochs, lr = 0.01):
