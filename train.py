@@ -11,17 +11,18 @@ import copy
 from termcolor import colored
 from scipy import optimize
 
-DATASET = 'WINE' #supports IRIS, WINE, MNIST, RADAR, PROTEIN, OCTAHEDRON
-desired_classes = [1,2,3]
+DATASET = 'MNIST' #supports IRIS, WINE, MNIST, RADAR, PROTEIN, OCTAHEDRON
+desired_classes = [0,1,6,9]
 # desired_classes = ['Iris-setosa','Iris-versicolor','Iris-virginica']
 num_points = 200
 random_state = 1600
+d = 2
 np.random.seed(random_state)
 
 num_clusters = len(desired_classes)
 epoch = 1
 
-(M, P, k, lambda_, lr, num_epochs, random_state, method, pca_init, labels) = MFConfig(dataset=DATASET, desired_classes=desired_classes, k=num_clusters, num_points=num_points, seed=random_state).dump()
+(M, P, k, lambda_, lr, num_epochs, random_state, method, pca_init, labels) = MFConfig(dataset=DATASET, desired_classes=desired_classes, k=num_clusters, num_points=num_points, seed=random_state, d=d).dump()
 
 def train():
     #assert num_clusters == len(desired_classes)
@@ -30,7 +31,7 @@ def train():
     M = normalise(M)
 
     if method.lower() == 'adam':
-        P_best = adam((P, M, k, lambda_), num_epochs = num_epochs, alpha = lr)
+        P_best, loss_best = adam((P, M, k, lambda_), num_epochs = num_epochs, alpha = lr)
     elif method.lower() == 'gradient ascent':
         P_best = VGA((P, M, k, lambda_), num_epochs = num_epochs, lr = lr)
     else:
@@ -91,29 +92,29 @@ if __name__ == '__main__':
         print(colored("LCR Rand score: {} \n PCA Rand score: {}".format(rand_score_MSTER, rand_score_PCA), "green"))
 
         ### NN purity score
-        # nn_score_MSTER = nn_score(A_best, labels)
-        # nn_score_PCA = nn_score(pca_init, labels)
-        # print(colored("LCR NN score: {} \n PCA NN score: {}".format(nn_score_MSTER, nn_score_PCA), "green"))
+        nn_score_MSTER = nn_score(A_best, labels)
+        nn_score_PCA = nn_score(pca_init, labels)
+        print(colored("LCR NN score: {} \n PCA NN score: {}".format(nn_score_MSTER, nn_score_PCA), "green"))
 
         ### Params
         print(colored("method={} \t lambda={} \t rand_state={}".format(method, lambda_, random_state), "blue"))
 
         ### PLOTTING
 
-        plt.figure(1)
-        plt.title('d=2 LCR Representation of {1} (n={0}, RAND={2}, NMI={3})'.format(num_points, DATASET, round(rand_score_MSTER,2), round(nmi_score_MSTER, 2)))
-        # print(_dict)
-        for i in _dict.keys():
-            plt.scatter(np.array(_dict[i])[:,0], np.array(_dict[i])[:,1], alpha=0.6)
-        plt.legend(desired_classes)
-        plt.savefig('figures/LCR_{1}_n={0}_classes={2}.png'.format(num_points, DATASET, str(desired_classes)))
-
-        plt.figure(2)
-        plt.title('d=2 PCA Representation of {1} (n={0}, RAND={2}, NMI={3})'.format(num_points, DATASET, round(rand_score_PCA,2), round(nmi_score_PCA,2)))
-        for i in _dict2.keys():
-            plt.scatter(np.array(_dict2[i])[:,0], np.array(_dict2[i])[:,1], alpha=0.6)
-        plt.legend(desired_classes)
-        plt.savefig('figures/PCA_{1}_n={0}_classes={2}.png'.format(num_points, DATASET, str(desired_classes)))
+        # plt.figure(1)
+        # plt.title('d=2 LCR Representation of {1} (n={0}, RAND={2}, NMI={3})'.format(num_points, DATASET, round(rand_score_MSTER,2), round(nmi_score_MSTER, 2)))
+        # # print(_dict)
+        # for i in _dict.keys():
+        #     plt.scatter(np.array(_dict[i])[:,0], np.array(_dict[i])[:,1], alpha=0.6)
+        # plt.legend(desired_classes)
+        # plt.savefig('figures/LCR_{1}_n={0}_classes={2}.png'.format(num_points, DATASET, str(desired_classes)))
+        #
+        # plt.figure(2)
+        # plt.title('d=2 PCA Representation of {1} (n={0}, RAND={2}, NMI={3})'.format(num_points, DATASET, round(rand_score_PCA,2), round(nmi_score_PCA,2)))
+        # for i in _dict2.keys():
+        #     plt.scatter(np.array(_dict2[i])[:,0], np.array(_dict2[i])[:,1], alpha=0.6)
+        # plt.legend(desired_classes)
+        # plt.savefig('figures/PCA_{1}_n={0}_classes={2}.png'.format(num_points, DATASET, str(desired_classes)))
 
         # plt.figure(3)
         # plt.title('K-Means predictions for LCR')
@@ -132,21 +133,21 @@ if __name__ == '__main__':
         # for i in _dict4.keys():
         #     plt.scatter(np.array(_dict4[i])[:,0], np.array(_dict4[i])[:,1], alpha=0.6)
         # plt.legend(range(10))
-    else:
-        plt.figure(1)
-        plt.title('d=2 LCR Representation of {1} (n={0}, k={2})'.format(num_points, DATASET, num_clusters))
-        # print(_dict)
-        for i in _dict.keys():
-            plt.scatter(np.array(_dict[i])[:,0], np.array(_dict[i])[:,1], alpha=0.6)
-        plt.legend(desired_classes)
-        plt.savefig('figures/PCA_{1}_n={0}_k={2})'.format(num_points, DATASET, num_clusters))
-
-        plt.figure(2)
-        plt.title('d=2 PCA Representation of {1} (n={0}, k={2})'.format(num_points, DATASET, num_clusters))
-        for i in _dict2.keys():
-            plt.scatter(np.array(_dict2[i])[:,0], np.array(_dict2[i])[:,1], alpha=0.6)
-        plt.legend(desired_classes)
-        plt.savefig('figures/PCA_{1}_n={0}_k={2})'.format(num_points, DATASET, num_clusters))
-
-
-    plt.show()
+    # else:
+    #     plt.figure(1)
+    #     plt.title('d=2 LCR Representation of {1} (n={0}, k={2})'.format(num_points, DATASET, num_clusters))
+    #     # print(_dict)
+    #     for i in _dict.keys():
+    #         plt.scatter(np.array(_dict[i])[:,0], np.array(_dict[i])[:,1], alpha=0.6)
+    #     plt.legend(desired_classes)
+    #     plt.savefig('figures/PCA_{1}_n={0}_k={2})'.format(num_points, DATASET, num_clusters))
+    #
+    #     plt.figure(2)
+    #     plt.title('d=2 PCA Representation of {1} (n={0}, k={2})'.format(num_points, DATASET, num_clusters))
+    #     for i in _dict2.keys():
+    #         plt.scatter(np.array(_dict2[i])[:,0], np.array(_dict2[i])[:,1], alpha=0.6)
+    #     plt.legend(desired_classes)
+    #     plt.savefig('figures/PCA_{1}_n={0}_k={2})'.format(num_points, DATASET, num_clusters))
+    #
+    #
+    # plt.show()

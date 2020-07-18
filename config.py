@@ -19,7 +19,7 @@ class MFConfig:
             data = np.mat(df.drop('class', axis=1))
             pca_0 = PCA(n_components = 30) #initial dim reduction for faster MST computation (from tSNE paper)
             init_data = np.mat(pca_0.fit_transform(data))
-            synth_pca = PCA(n_components = 2)
+            synth_pca = PCA(n_components = d)
             pca_init = np.mat(synth_pca.fit_transform(init_data))
             self.M = init_data
             self.pca_init = pca_init
@@ -32,7 +32,7 @@ class MFConfig:
                 df = df.sample(n=num_points, random_state=seed)
             labels = np.array(df[0])
             data = np.mat(df.drop(0, axis=1))
-            synth_pca = PCA(n_components = 2)
+            synth_pca = PCA(n_components = d)
             pca_init = np.mat(synth_pca.fit_transform(data))
             self.M = data
             self.pca_init = pca_init
@@ -49,7 +49,7 @@ class MFConfig:
             data = np.mat(df.drop('labels', axis=1))
             pca_0 = PCA(n_components = 30) #initial dim reduction for faster MST computation (from tSNE paper)
             init_data = np.mat(pca_0.fit_transform(data))
-            synth_pca = PCA(n_components = 2)
+            synth_pca = PCA(n_components = d)
             pca_init = np.mat(synth_pca.fit_transform(init_data))
             self.M = init_data
             self.pca_init = pca_init
@@ -64,7 +64,7 @@ class MFConfig:
                 df = df.sample(n=num_points, random_state=seed)
             labels = np.array(df['labels'])
             data = np.mat(df.drop('labels', axis=1))
-            synth_pca = PCA(n_components = 2)
+            synth_pca = PCA(n_components = d)
             pca_init = np.mat(synth_pca.fit_transform(data))
             self.M = data
             self.pca_init = pca_init
@@ -77,7 +77,7 @@ class MFConfig:
                 df = df.sample(n=num_points, random_state=seed)
             labels = np.array(df[4])
             data = np.mat(df.drop(4, axis=1))
-            synth_pca = PCA(n_components=2)
+            synth_pca = PCA(n_components=d)
             pca_init = synth_pca.fit_transform(data)
             self.M = data
             self.pca_init = pca_init
@@ -94,7 +94,7 @@ class MFConfig:
             arr[5,0:3] = [0, 0, -5]
             init_data, labels = datasets.make_blobs(n_samples=num_points, n_features=num_dimensions, centers = arr, cluster_std=0.6)
             init_data = np.mat(init_data)
-            synth_pca = PCA(n_components=2)
+            synth_pca = PCA(n_components=d)
             pca_init = synth_pca.fit_transform(init_data)
             self.M = init_data
             self.pca_init = pca_init
@@ -104,7 +104,7 @@ class MFConfig:
             # self.M = np.mat(np.random.rand(num_points,20))
             data = np.mat(scipy.sparse.random(num_points,20, density = 0.1).A)
             labels = np.zeros(num_points)
-            synth_pca = PCA(n_components=2)
+            synth_pca = PCA(n_components=d)
             pca_init = synth_pca.fit_transform(data)
             self.M = data
             self.pca_init = pca_init
@@ -129,7 +129,7 @@ class MFConfig:
         # self.method = 'BFGS'
         # self.method = 'gradient ascent'
 
-        self.lr = 0.01
+        self.lr = 0.1
         self.lambda_ = 0 #
         self.num_epochs = 50 #maximum number of epochs for optimization
 
