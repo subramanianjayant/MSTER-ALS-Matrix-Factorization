@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from sklearn import datasets, decomposition, metrics
 from matplotlib import pyplot as plt
+from hierarchy import dist, merge, calc_partitions
 
 ############# CONSTANTS ##############
 
@@ -21,10 +22,13 @@ def perplex_helper(Di, sigma):
     Pf = Pi/Psum
     return Pf, perp_calc
 
-
+#NEED TO OPTIMIZE FROM O(n^2)
 def calc_p_vals(X, tol = 1e-5, perplexity = 30.0):
     (n, d) = X.shape
-    pdists = metrics.pairwise.euclidean_distances(X, squared=True)
+
+    partitions, pdist = calc_partitions(X, dist)
+    pdists = pdist[0]
+
     P = np.zeros((n, n))
     sigmas = np.ones((n,1))
 
@@ -61,7 +65,7 @@ def calc_p_vals(X, tol = 1e-5, perplexity = 30.0):
 ###################### MAIN #########################
 
 if __name__ == '__main__':
-    x_init, xlabels = datasets.make_blobs(n_samples=DATA_SIZE,n_features=100, centers=5)
+    x_init, xlabels = datasets.make_blobs(n_samples=DATA_SIZE,n_features=100, centers=5, cluster_std = 1)
     y = np.random.rand(DATA_SIZE, 2)
 
     #PCA and normalize into ball of radius 1
@@ -95,7 +99,7 @@ if __name__ == '__main__':
 
         #compute qvals -> computation trick from van der maaten's code
         sum_Y = np.sum(np.square(y), 1)
-        num = -2. * np.dot(y, y.T)
+        num = -2. * np.dot(y, y.T)                              #-> OPTIMIZE THIS OVER PARTITION SLICES
         num = 1. / (1. + np.add(np.add(num, sum_Y).T, sum_Y))
         num[range(n), range(n)] = 0.
         qvals = num / np.sum(num)
@@ -130,7 +134,7 @@ if __name__ == '__main__':
         if iter == 100:
             pvals = pvals/4
 
-    plt.scatter(y[:,0], y[:,1])
+    plt.scatter(y[:,0], y[:,1], alpha=0.2)
     plt.show()
 
 #####################################################
