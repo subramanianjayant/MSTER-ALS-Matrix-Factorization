@@ -9,7 +9,7 @@ import copy
 ############# CONSTANTS ##############
 
 DATA_SIZE = 1000
-ITERATIONS = 200
+ITERATIONS = 2000
 
 ######################################
 
@@ -67,25 +67,25 @@ def calc_p_vals(X, tol = 1e-5, perplexity = 30.0):
 
 if __name__ == '__main__':
 
-    # desired_classes = range(10)
+    desired_classes = [0,1,3,6,8]
     random_state = 1000
-    # df = pd.read_csv('../mnist_784_zip/data/mnist_784_csv.csv')
-    # df = df.loc[df['class'].isin(desired_classes)]
-    # df = df.sample(n=DATA_SIZE, random_state=random_state)
-    # labels = np.array(df['class'])
-    # x_init = np.mat(df.drop('class', axis=1))
+    df = pd.read_csv('../mnist_784_zip/data/mnist_784_csv.csv')
+    df = df.loc[df['class'].isin(desired_classes)]
+    df = df.sample(n=DATA_SIZE, random_state=random_state)
+    labels = np.array(df['class'])
+    x_init = np.mat(df.drop('class', axis=1))
 
     np.random.seed(random_state)
 
-    desired_classes = [0,1,2,3,4]
-    x_init, labels = datasets.make_blobs(n_samples=DATA_SIZE,n_features=100, centers=5, cluster_std = 1)
+    # desired_classes = [0,1,2,3,4]
+    # x_init, labels = datasets.make_blobs(n_samples=DATA_SIZE,n_features=100, centers=5, cluster_std = 1)
     y = np.random.rand(DATA_SIZE, 2)
 
 
 
     #PCA and normalize into ball of radius 1
     x = decomposition.PCA(n_components=30).fit_transform(x_init)
-    x = x/np.max(x)
+    x = x/np.var(np.linalg.norm(x, axis=1))
 
     (n,d) = x.shape
 
@@ -146,10 +146,12 @@ if __name__ == '__main__':
             print("Iteration %d: error is %f" % (iter + 1, L))
 
         #stop early exaggeration
-        if iter == 100:
+        if iter == 300:
             pvals = pvals/4
 
     try:
+        np.save('htsne_data.csv', y)
+        np.save('htsne_labels.csv', labels)
         plt.figure()
         base = {}
         for class_ in desired_classes:
@@ -163,6 +165,7 @@ if __name__ == '__main__':
     except Exception as e:
         print(e)
         plt.scatter(y[:,0], y[:,1], alpha=0.2)
+    plt.axis('equal')
     plt.show()
 
 #####################################################
