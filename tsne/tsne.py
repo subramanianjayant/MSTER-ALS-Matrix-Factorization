@@ -4,6 +4,7 @@ import pandas as pd
 from sklearn import datasets, decomposition, metrics
 from matplotlib import pyplot as plt
 from hierarchy import dist, merge, calc_partitions
+import copy
 
 ############# CONSTANTS ##############
 
@@ -65,8 +66,22 @@ def calc_p_vals(X, tol = 1e-5, perplexity = 30.0):
 ###################### MAIN #########################
 
 if __name__ == '__main__':
-    x_init, xlabels = datasets.make_blobs(n_samples=DATA_SIZE,n_features=100, centers=5, cluster_std = 1)
+
+    # desired_classes = range(10)
+    random_state = 1000
+    # df = pd.read_csv('../mnist_784_zip/data/mnist_784_csv.csv')
+    # df = df.loc[df['class'].isin(desired_classes)]
+    # df = df.sample(n=DATA_SIZE, random_state=random_state)
+    # labels = np.array(df['class'])
+    # x_init = np.mat(df.drop('class', axis=1))
+
+    np.random.seed(random_state)
+
+    desired_classes = [0,1,2,3,4]
+    x_init, labels = datasets.make_blobs(n_samples=DATA_SIZE,n_features=100, centers=5, cluster_std = 1)
     y = np.random.rand(DATA_SIZE, 2)
+
+
 
     #PCA and normalize into ball of radius 1
     x = decomposition.PCA(n_components=30).fit_transform(x_init)
@@ -134,7 +149,20 @@ if __name__ == '__main__':
         if iter == 100:
             pvals = pvals/4
 
-    plt.scatter(y[:,0], y[:,1], alpha=0.2)
+    try:
+        plt.figure()
+        base = {}
+        for class_ in desired_classes:
+            base[class_] = []
+        _dict = copy.deepcopy(base)
+        for i,row in enumerate(y):
+            _dict[labels[i]].append(row)
+        for i in _dict.keys():
+            plt.scatter(np.array(_dict[i])[:,0], np.array(_dict[i])[:,1], alpha=0.6)
+        plt.legend(desired_classes)
+    except Exception as e:
+        print(e)
+        plt.scatter(y[:,0], y[:,1], alpha=0.2)
     plt.show()
 
 #####################################################
