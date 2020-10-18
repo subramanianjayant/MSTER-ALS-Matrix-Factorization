@@ -68,20 +68,20 @@ def calc_p_vals(X, tol = 1e-5, perplexity = 30.0):
 
 if __name__ == '__main__':
 
-    # desired_classes = [0,1,3,6,8]
+    desired_classes = [0,1,3,6]
     random_state = 1000
-    # df = pd.read_csv('../mnist_784_zip/data/mnist_784_csv.csv')
-    # df = df.loc[df['class'].isin(desired_classes)]
-    # df = df.sample(n=DATA_SIZE, random_state=random_state)
-    # labels = np.array(df['class'])
-    # x_init = np.mat(df.drop('class', axis=1))
+    df = pd.read_csv('../mnist_784_zip/data/mnist_784_csv.csv')
+    df = df.loc[df['class'].isin(desired_classes)]
+    df = df.sample(n=DATA_SIZE, random_state=random_state)
+    labels = np.array(df['class'])
+    x_init = np.mat(df.drop('class', axis=1))
 
 
 
     np.random.seed(random_state)
 
-    desired_classes = [0,1,2,3,4]
-    x_init, labels = datasets.make_blobs(n_samples=DATA_SIZE,n_features=100, centers=5, cluster_std = 1)
+    #desired_classes = [0,1,2,3,4]
+    #x_init, labels = datasets.make_blobs(n_samples=DATA_SIZE,n_features=100, centers=5, cluster_std = 1)
     y = np.random.rand(DATA_SIZE, 2)
 
 
@@ -102,7 +102,7 @@ if __name__ == '__main__':
         pvals[idx] = np.maximum(pvals[idx], 1e-12)
 
     #gradient descent params
-    weights = [1]+[0 for x in range(len(partitions)-1)]
+    weights = [1]+[1/len(partitions) for x in range(len(partitions)-1)]
     dys = [np.zeros((n,2)) for x in range(len(partitions))]
     lr = 50
 
@@ -156,7 +156,7 @@ if __name__ == '__main__':
             print("Iteration %d: error is %f" % (iter + 1, L))
 
         #stop early exaggeration
-        if iter == int(ITERATIONS / 5):
+        if iter == int(0 / 5):
             for i in range(len(pvals)):
                 pvals[i] = pvals[i]/4
 
@@ -172,11 +172,13 @@ if __name__ == '__main__':
                 plt.scatter(np.array(_dict[i])[:,0], np.array(_dict[i])[:,1], alpha=0.6)
             plt.legend(desired_classes)
             plt.axis('equal')
-            plt.show()
+            plt.savefig('diagram/iter'+str(iter))
 
     try:
-        np.save('htsne_data.csv', y)
-        np.save('htsne_labels.csv', labels)
+        np.save('htsne_data', y)
+        np.save('htsne_labels', labels)
+        np.save('htsne_data_hd', x_init)
+        
         plt.figure()
         base = {}
         for class_ in desired_classes:
