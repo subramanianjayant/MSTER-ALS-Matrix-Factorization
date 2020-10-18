@@ -68,18 +68,20 @@ def calc_p_vals(X, tol = 1e-5, perplexity = 30.0):
 
 if __name__ == '__main__':
 
-    desired_classes = [0,1,3,6,8]
+    # desired_classes = [0,1,3,6,8]
     random_state = 1000
-    df = pd.read_csv('../mnist_784_zip/data/mnist_784_csv.csv')
-    df = df.loc[df['class'].isin(desired_classes)]
-    df = df.sample(n=DATA_SIZE, random_state=random_state)
-    labels = np.array(df['class'])
-    x_init = np.mat(df.drop('class', axis=1))
+    # df = pd.read_csv('../mnist_784_zip/data/mnist_784_csv.csv')
+    # df = df.loc[df['class'].isin(desired_classes)]
+    # df = df.sample(n=DATA_SIZE, random_state=random_state)
+    # labels = np.array(df['class'])
+    # x_init = np.mat(df.drop('class', axis=1))
+
+
 
     np.random.seed(random_state)
 
-    # desired_classes = [0,1,2,3,4]
-    # x_init, labels = datasets.make_blobs(n_samples=DATA_SIZE,n_features=100, centers=5, cluster_std = 1)
+    desired_classes = [0,1,2,3,4]
+    x_init, labels = datasets.make_blobs(n_samples=DATA_SIZE,n_features=100, centers=5, cluster_std = 1)
     y = np.random.rand(DATA_SIZE, 2)
 
 
@@ -154,9 +156,23 @@ if __name__ == '__main__':
             print("Iteration %d: error is %f" % (iter + 1, L))
 
         #stop early exaggeration
-        if iter == 300:
+        if iter == int(ITERATIONS / 5):
             for i in range(len(pvals)):
                 pvals[i] = pvals[i]/4
+
+        if iter % 20 == 0:
+            plt.figure()
+            base = {}
+            for class_ in desired_classes:
+                base[class_] = []
+            _dict = copy.deepcopy(base)
+            for i,row in enumerate(y):
+                _dict[labels[i]].append(row)
+            for i in _dict.keys():
+                plt.scatter(np.array(_dict[i])[:,0], np.array(_dict[i])[:,1], alpha=0.6)
+            plt.legend(desired_classes)
+            plt.axis('equal')
+            plt.show()
 
     try:
         np.save('htsne_data.csv', y)
