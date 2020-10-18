@@ -8,8 +8,8 @@ import copy
 
 ############# CONSTANTS ##############
 
-DATA_SIZE = 1000
-ITERATIONS = 300
+DATA_SIZE = 100
+ITERATIONS = 200
 
 ######################################
 
@@ -28,39 +28,39 @@ def calc_p_vals(X, tol = 1e-5, perplexity = 30.0):
     (n, d) = X.shape
 
     partitions, pdist = calc_partitions(X, dist)
-    pdists = pdist[0]
+    P = [np.zeros((n, n)) for p in partitions]
+    sigmas = [np.ones((n,1)) for p in partitions]
 
-    P = np.zeros((n,n))
-    sigmas = np.ones((n,1))
-
-
-    for i in range(n):
-        Di = pdists[i, np.concatenate((np.r_[0:i], np.r_[i+1:n]))]
-        Pf, perp_calc = perplex_helper(Di, sigmas[i])
-        #perplexity calculation - binary search for best param
-        min_ = -np.inf
-        max_ = np.inf
-        count = 0
-        diff = perp_calc - np.log(perplexity)
-        while diff > tol and count < 50:
-            if diff > 0:
-                min_ = sigmas[i].copy()
-                if max_ == np.inf or max_ == -np.inf:
-                    sigmas[i] = sigmas[i] * 2.
+    for p in range(len(partitions)):
+        for i in range(n):
+            scaled_perplexity = perplexity*math.sqrt((n/DATA_SIZE)) #Adjust perplexity based on partiton data size
+            pdists = pdist[p]
+            Di = pdists[i, np.concatenate((np.r_[0:i], np.r_[i+1:n]))]
+            Pf, perp_calc = perplex_helper(Di, sigmas[p][i])
+            #perplexity calculation - binary search for best param
+            min_ = -np.inf
+            max_ = np.inf
+            count = 0
+            diff = perp_calc - np.log(scaled_perplexity)
+            while diff > tol and count < 50:
+                if diff > 0:
+                    min_ = sigmas[p][i].copy()
+                    if max_ == np.inf or max_ == -np.inf:
+                        sigmas[p][i] = sigmas[p][i] * 2.
+                    else:
+                        sigmas[p][i] = (sigmas[p][i] + max_) / 2.
                 else:
-                    sigmas[i] = (sigmas[i] + max_) / 2.
-            else:
-                max_ = sigmas[i].copy()
-                if min_ == np.inf or min_ == -np.inf:
-                    sigmas[i] = sigmas[i] / 2.
-                else:
-                    sigmas[i] = (sigmas[i] + min_) / 2.
-            count+=1
-            Pf, perp_calc = perplex_helper(Di, sigmas[i])
-            diff = perp_calc - np.log(perplexity)
+                    max_ = sigmas[p][i].copy()
+                    if min_ == np.inf or min_ == -np.inf:
+                        sigmas[p][i] = sigmas[p][i] / 2.
+                    else:
+                        sigmas[p][i] = (sigmas[p][i] + min_) / 2.
+                count+=1
+                Pf, perp_calc = perplex_helper(Di, sigmas[p][i])
+                diff = perp_calc - np.log(scaled_perplexity)
 
-        P[i, np.concatenate((np.r_[0:i], np.r_[i+1:n]))] = Pf
-    return P
+            P[p][i, np.concatenate((np.r_[0:i], np.r_[i+1:n]))] = Pf
+    return P, partitions
 
 ######################################################
 
@@ -90,17 +90,18 @@ if __name__ == '__main__':
 
     (n,d) = x.shape
 
-    pvals  = calc_p_vals(x)
+    pvals, partitions = calc_p_vals(x)
+    for idx in range(len(pvals)):
+        pvals[idx] = pvals[idx] + pvals[idx].T       # calculate symmetric pvals
+        pvals[idx] = pvals[idx] / np.sum(pvals[idx])
 
-    pvals = pvals + pvals.T       # calculate symmetric pvals
-    pvals = pvals / np.sum(pvals)
-
-    #early exaggeration
-    pvals = pvals * 4.
-    pvals = np.maximum(pvals, 1e-12)
+        #early exaggeration
+        pvals[idx] = pvals[idx] * 4.
+        pvals[idx] = np.maximum(pvals[idx], 1e-12)
 
     #gradient descent params
-    dy = np.zeros((n,2))
+    weights = [1]+[0 for x in range(len(partitions)-1)]
+    dys = [np.zeros((n,2)) for x in range(len(partitions))]
     lr = 50
 
     # params for van der maaten's momentum magic!
@@ -114,19 +115,21 @@ if __name__ == '__main__':
 
     for iter in range(ITERATIONS):
 
-
-        #qvals for first layer -> computation trick from van der maaten's code
-        sum_Y = np.sum(np.square(y), 1)
-        num = -2. * np.dot(y, y.T)
-        num = 1. / (1. + np.add(np.add(num, sum_Y).T, sum_Y))
-        num[range(n), range(n)] = 0.
-        qvals = num / np.sum(num)
-        qvals = np.maximum(qvals, 1e-12)
+        #compute qvals for each partition
+        qdists = calc_dists(y, partitions, dist)
+        qvals = []
+        for d in qdists:
+            num = 1. / (1. + d)
+            num[range(n), range(n)] = 0.
+            qval = num / np.sum(num)
+            qval = np.maximum(qval, 1e-12)
+            qvals.append(qval)
 
         #compute gradient -> computation trick again stolen from van der maaten
-        PQ = pvals - qvals
-        for i in range(n):
-            dy[i,:] = np.sum(np.tile(PQ[:, i] * num[:, i], (2, 1)).T * (y[i, :] - y), 0)
+        for d in range(len(pvals)):
+            PQ = pvals[d] - qvals[d]
+            for i in range(n):
+                dys[d][i,:] = weights[d]*np.sum(np.tile(PQ[:, i] * num[:, i], (2, 1)).T * (y[i, :] - y), 0)
 
         # van der maaten's momentum magic
         # if iter < 20:
@@ -141,20 +144,23 @@ if __name__ == '__main__':
         # y = y - np.tile(np.mean(y, 0), (n, 1))
 
         #our shitty gd implementation
-        y = y-lr*dy
+        y = y-lr*sum(dys)
 
         #print loss value
         if (iter + 1) % 10 == 0:
-            L = np.sum(pvals * np.log(pvals / qvals))  #KL divergence
+            L = 0
+            for i in range(len(pvals)):
+                L += np.sum(pvals[i] * np.log(pvals[i] / qvals[i]))  #KL divergence
             print("Iteration %d: error is %f" % (iter + 1, L))
 
         #stop early exaggeration
-        if iter == 100:
-            pvals = pvals/4
+        if iter == 300:
+            for i in range(len(pvals)):
+                pvals[i] = pvals[i]/4
 
     try:
-        np.save('tsne_data.csv', y)
-        np.save('tsne_labels.csv', labels)
+        np.save('htsne_data.csv', y)
+        np.save('htsne_labels.csv', labels)
         plt.figure()
         base = {}
         for class_ in desired_classes:
