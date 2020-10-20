@@ -1,3 +1,4 @@
+import scipy
 from scipy.cluster import hierarchy
 from scipy.spatial import distance
 from matplotlib import pyplot as plt
@@ -16,7 +17,6 @@ for filename in [fname, hd_fname]:
     
     plt.figure()
     labels_ = np.load(label_fname)
-    print(labels_)
     dn = hierarchy.dendrogram(Z, labels = labels_)
     plt.show()
-    plt.savefig("dendrogram" + filename[5:] + ".png", dpi = 600)
+    #plt.savefig("dendrogram" + filename[5:] + ".png", dpi = 600)

@@ -4,6 +4,9 @@ import pandas as pd
 from sklearn import datasets, decomposition, metrics
 from matplotlib import pyplot as plt
 from hierarchy import dist, merge, calc_partitions, calc_dists
+import scipy
+from scipy.cluster import hierarchy
+from scipy.spatial import distance
 import copy
 
 ############# CONSTANTS ##############
@@ -62,6 +65,28 @@ def calc_p_vals(X, tol = 1e-5, perplexity = 30.0):
             P[p][i, np.concatenate((np.r_[0:i], np.r_[i+1:n]))] = Pf
     return P, partitions
 
+#takes in high-dimensional data, outputs lengths of branch segments
+#Outputs weights as % of total height, ordered from first cluster merge to last cluster merge
+def get_dendrogram_weights(x, method = 'ward'):
+    ytdist = distance.pdist(x, metric = 'euclidean')
+    Z = hierarchy.linkage(ytdist, method)
+    dn = hierarchy.dendrogram(Z)
+
+    icoord = scipy.array(dn['icoord'])
+    dcoord = scipy.array(dn['dcoord'])
+    x = sorted(list(zip(dn['dcoord'])), key = lambda x: x[0][1], reverse = True)
+    print((x))
+    height = x[0][0][1]
+    weights = []
+    x.append(([0,0,0,0],))
+    while len(x) > 1:
+        print(x[0])
+        weights.append(x[0][0][1] - x[1][0][1])
+        x.pop(0)
+        print(len(x))
+    weights = weights / height
+    return weights
+
 ######################################################
 
 ###################### MAIN #########################
@@ -76,15 +101,11 @@ if __name__ == '__main__':
     labels = np.array(df['class'])
     x_init = np.mat(df.drop('class', axis=1))
 
-
-
     np.random.seed(random_state)
 
     #desired_classes = [0,1,2,3,4]
     #x_init, labels = datasets.make_blobs(n_samples=DATA_SIZE,n_features=100, centers=5, cluster_std = 1)
     y = np.random.rand(DATA_SIZE, 2)
-
-
 
     #PCA and normalize into ball of radius 1
     x = decomposition.PCA(n_components=30).fit_transform(x_init)
@@ -160,19 +181,19 @@ if __name__ == '__main__':
             for i in range(len(pvals)):
                 pvals[i] = pvals[i]/4
 
-        if iter % 20 == 0:
-            plt.figure()
-            base = {}
-            for class_ in desired_classes:
-                base[class_] = []
-            _dict = copy.deepcopy(base)
-            for i,row in enumerate(y):
-                _dict[labels[i]].append(row)
-            for i in _dict.keys():
-                plt.scatter(np.array(_dict[i])[:,0], np.array(_dict[i])[:,1], alpha=0.6)
-            plt.legend(desired_classes)
-            plt.axis('equal')
-            plt.savefig('diagram/iter'+str(iter))
+        # if iter % 20 == 0:
+        #     plt.figure()
+        #     base = {}
+        #     for class_ in desired_classes:
+        #         base[class_] = []
+        #     _dict = copy.deepcopy(base)
+        #     for i,row in enumerate(y):
+        #         _dict[labels[i]].append(row)
+        #     for i in _dict.keys():
+        #         plt.scatter(np.array(_dict[i])[:,0], np.array(_dict[i])[:,1], alpha=0.6)
+        #     plt.legend(desired_classes)
+        #     plt.axis('equal')
+        #     plt.savefig('diagram/iter'+str(iter))
 
     try:
         np.save('htsne_data', y)
