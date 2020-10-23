@@ -75,15 +75,15 @@ def get_dendrogram_weights(x, method = 'ward'):
     icoord = scipy.array(dn['icoord'])
     dcoord = scipy.array(dn['dcoord'])
     x = sorted(list(zip(dn['dcoord'])), key = lambda x: x[0][1], reverse = True)
-    print((x))
+#    print((x))
     height = x[0][0][1]
     weights = []
     x.append(([0,0,0,0],))
     while len(x) > 1:
-        print(x[0])
+#        print(x[0])
         weights.append(x[0][0][1] - x[1][0][1])
         x.pop(0)
-        print(len(x))
+#        print(len(x))
     weights = weights / height
     return weights
 
@@ -123,7 +123,8 @@ if __name__ == '__main__':
         pvals[idx] = np.maximum(pvals[idx], 1e-12)
 
     #gradient descent params
-    weights = [1]+[1/len(partitions) for x in range(len(partitions)-1)]
+ #   weights = [1]+[1/len(partitions) for x in range(len(partitions)-1)]
+    weights = get_dendrogram_weights(x)
     dys = [np.zeros((n,2)) for x in range(len(partitions))]
     lr = 50
 
