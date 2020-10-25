@@ -11,8 +11,8 @@ import copy
 import pickle
 ############# CONSTANTS ##############
 
-DATA_SIZE = 1000
-ITERATIONS = 700
+DATA_SIZE = 700
+ITERATIONS = 500
 
 ######################################
 
@@ -93,9 +93,10 @@ def get_dendrogram_weights(x, method = 'ward'):
 
 if __name__ == '__main__':
 
-    desired_classes = [0,1,3,6]
+    desired_classes = [0,1,2,3]
     random_state = 1000
-    df = pd.read_csv('../mnist_784_zip/data/mnist_784_csv.csv')
+    df = pd.DataFrame(np.load("../cnn_postprocessed.csv.npy"))
+    df['class'] = np.load('../cnn_labels.csv.npy')
     df = df.loc[df['class'].isin(desired_classes)]
     df = df.sample(n=DATA_SIZE, random_state=random_state)
     labels = np.array(df['class'])
@@ -124,14 +125,14 @@ if __name__ == '__main__':
 
     print("dumping pvals and partitions")
 
-    with open('pvals1000', 'wb') as f:
+    with open('pvals_inet_700', 'wb') as f:
         pickle.dump(pvals, f)
-    with open('partition1000', 'wb') as f:
+    with open('partitions_inet_700', 'wb') as f:
         pickle.dump(partitions, f)
     #gradient descent params
  #   weights = [1]+[1/len(partitions) for x in range(len(partitions)-1)]
     weights = get_dendrogram_weights(x)
-    with open('weights1000', 'wb') as f:
+    with open('weights_inet_700', 'wb') as f:
         pickle.dump(weights, f)
 
     dys = [np.zeros((n,2)) for x in range(len(partitions))]
@@ -207,9 +208,9 @@ if __name__ == '__main__':
 
     print("saving result")
     try:
-        np.save('htsne_data1000', y)
-        np.save('htsne_labels1000', labels)
-        np.save('htsne_data_hd1000', x_init)
+        np.save('htsne_data_inet700', y)
+        np.save('htsne_labels_inet700', labels)
+        np.save('htsne_data_hd_inet700', x_init)
         
         plt.figure()
         base = {}
@@ -225,7 +226,7 @@ if __name__ == '__main__':
         print(e)
         plt.scatter(y[:,0], y[:,1], alpha=0.2)
     plt.axis('equal')
-    plt.savefig('1000_700.png')
+    plt.savefig('inet_700_500.png')
     plt.show()
 
 #####################################################
