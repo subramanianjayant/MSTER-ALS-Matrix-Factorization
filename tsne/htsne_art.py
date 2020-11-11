@@ -11,8 +11,8 @@ import copy
 import pickle
 ############# CONSTANTS ##############
 
-DATA_SIZE = 700
-ITERATIONS = 700
+DATA_SIZE = 300
+ITERATIONS = 600
 
 ######################################
 
@@ -93,10 +93,10 @@ def get_dendrogram_weights(x, method = 'ward'):
 
 if __name__ == '__main__':
 
-    desired_classes = [0,1,2,3]
+    desired_classes = [0,1,2]
     random_state = 1000
-    df = pd.DataFrame(np.load("../cnn_postprocessed.csv.npy"))
-    df['class'] = np.load('../cnn_labels.csv.npy')
+    df = pd.DataFrame(np.load("./art_4_8_100_300ptx.npy"))
+    df['class'] = np.load('./art_4_8_100_300pty.npy')
     df = df.loc[df['class'].isin(desired_classes)]
     df = df.sample(n=DATA_SIZE, random_state=random_state)
     labels = np.array(df['class'])
@@ -125,14 +125,14 @@ if __name__ == '__main__':
 
     print("dumping pvals and partitions")
 
-    with open('pvals_inet_700', 'wb') as f:
+    with open('pval_art_4_8_100_300', 'wb') as f:
         pickle.dump(pvals, f)
-    with open('partitions_inet_700', 'wb') as f:
+    with open('partitions_art_4_8_100_300', 'wb') as f:
         pickle.dump(partitions, f)
     #gradient descent params
  #   weights = [1]+[1/len(partitions) for x in range(len(partitions)-1)]
     weights = get_dendrogram_weights(x)[::-1]
-    with open('weights_inet_700', 'wb') as f:
+    with open('weights_art_4_8_100_300', 'wb') as f:
         pickle.dump(weights, f)
 
     dys = [np.zeros((n,2)) for x in range(len(partitions))]
@@ -208,9 +208,9 @@ if __name__ == '__main__':
 
     print("saving result")
     try:
-        np.save('htsne_data_inet700', y)
-        np.save('htsne_labels_inet700', labels)
-        np.save('htsne_data_hd_inet700', x_init)
+        np.save('htsne_data_art_4_8_100_300', y)
+        np.save('htsne_labels_art_4_8_100_300', labels)
+        np.save('htsne_data_hd_art_4_8_100_300', x_init)
         
         plt.figure()
         base = {}
@@ -226,7 +226,7 @@ if __name__ == '__main__':
         print(e)
         plt.scatter(y[:,0], y[:,1], alpha=0.2)
     plt.axis('equal')
-    plt.savefig('inet_700_700.png')
+    plt.savefig('art_4_8_100_300.png')
     plt.show()
 
 #####################################################
