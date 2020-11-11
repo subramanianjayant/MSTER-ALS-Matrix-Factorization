@@ -11,8 +11,8 @@ import copy
 import pickle
 ############# CONSTANTS ##############
 
-DATA_SIZE = 1000
-ITERATIONS = 700
+DATA_SIZE = 100
+ITERATIONS = 300
 
 ######################################
 
@@ -130,7 +130,7 @@ if __name__ == '__main__':
         pickle.dump(partitions, f)
     #gradient descent params
  #   weights = [1]+[1/len(partitions) for x in range(len(partitions)-1)]
-    weights = get_dendrogram_weights(x)
+    weights = get_dendrogram_weights(x)[::-1]
     with open('weights1000', 'wb') as f:
         pickle.dump(weights, f)
 
@@ -145,11 +145,13 @@ if __name__ == '__main__':
     min_gain = 0.01
     eta = 500
 
+    print('Preprocessing done...\n\n')
 
     for iter in range(ITERATIONS):
 
         #compute qvals for each partition
-        qdists = calc_dists(y, partitions, dist)
+        qdist_temp = calc_dists(y, [partitions[0]], dist)[0]
+        qdists = [qdist_temp for p in partitions]
         qvals = []
         for d in qdists:
             num = 1. / (1. + d)
@@ -210,7 +212,7 @@ if __name__ == '__main__':
         np.save('htsne_data1000', y)
         np.save('htsne_labels1000', labels)
         np.save('htsne_data_hd1000', x_init)
-        
+
         plt.figure()
         base = {}
         for class_ in desired_classes:

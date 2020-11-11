@@ -8,7 +8,7 @@ import copy
 
 ############# CONSTANTS ##############
 
-DATA_SIZE = 1000
+DATA_SIZE = 100
 ITERATIONS = 300
 
 ######################################
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     min_gain = 0.01
     eta = 500
 
-
+    print('Preprocessing done...\n\n')
     for iter in range(ITERATIONS):
 
 
