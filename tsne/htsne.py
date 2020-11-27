@@ -11,8 +11,8 @@ import copy
 import pickle
 ############# CONSTANTS ##############
 
-DATA_SIZE = 100
-ITERATIONS = 300
+DATA_SIZE = 1000
+ITERATIONS = 1000
 
 ######################################
 

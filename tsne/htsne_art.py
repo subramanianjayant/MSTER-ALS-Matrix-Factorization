@@ -95,8 +95,8 @@ if __name__ == '__main__':
 
     desired_classes = [0,1,2]
     random_state = 1000
-    df = pd.DataFrame(np.load("./art_4_8_100_300ptx.npy"))
-    df['class'] = np.load('./art_4_8_100_300pty.npy')
+    df = pd.DataFrame(np.load("./art_10_20_100_300ptx.npy"))
+    df['class'] = np.load('./art_10_20_100_300pty.npy')
     df = df.loc[df['class'].isin(desired_classes)]
     df = df.sample(n=DATA_SIZE, random_state=random_state)
     labels = np.array(df['class'])
@@ -125,14 +125,14 @@ if __name__ == '__main__':
 
     print("dumping pvals and partitions")
 
-    with open('pval_art_4_8_100_300', 'wb') as f:
+    with open('pval_art_10_20_100_300', 'wb') as f:
         pickle.dump(pvals, f)
-    with open('partitions_art_4_8_100_300', 'wb') as f:
+    with open('partitions_art_10_20_100_300', 'wb') as f:
         pickle.dump(partitions, f)
     #gradient descent params
  #   weights = [1]+[1/len(partitions) for x in range(len(partitions)-1)]
     weights = get_dendrogram_weights(x)[::-1]
-    with open('weights_art_4_8_100_300', 'wb') as f:
+    with open('weights_art_10_20_100_300', 'wb') as f:
         pickle.dump(weights, f)
 
     dys = [np.zeros((n,2)) for x in range(len(partitions))]
@@ -150,7 +150,9 @@ if __name__ == '__main__':
     for iter in range(ITERATIONS):
 
         #compute qvals for each partition
-        qdists = calc_dists(y, partitions, dist)
+        #changed so only 1 qval
+        qdist_temp = calc_dists(y, [partitions[0]], dist)[0]
+        qdists = [qdist_temp for p in partitions]
         qvals = []
         for d in qdists:
             num = 1. / (1. + d)
@@ -208,9 +210,9 @@ if __name__ == '__main__':
 
     print("saving result")
     try:
-        np.save('htsne_data_art_4_8_100_300', y)
-        np.save('htsne_labels_art_4_8_100_300', labels)
-        np.save('htsne_data_hd_art_4_8_100_300', x_init)
+        np.save('htsne_data_art_10_20_100_300', y)
+        np.save('htsne_labels_art_10_20_100_300', labels)
+        np.save('htsne_data_hd_art_10_20_100_300', x_init)
         
         plt.figure()
         base = {}
@@ -226,7 +228,7 @@ if __name__ == '__main__':
         print(e)
         plt.scatter(y[:,0], y[:,1], alpha=0.2)
     plt.axis('equal')
-    plt.savefig('art_4_8_100_300.png')
+    plt.savefig('art_10_20_100_300_1.png')
     plt.show()
 
 #####################################################

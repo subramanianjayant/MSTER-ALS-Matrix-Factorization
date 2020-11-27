@@ -150,7 +150,9 @@ if __name__ == '__main__':
     for iter in range(ITERATIONS):
 
         #compute qvals for each partition
-        qdists = calc_dists(y, partitions, dist)
+
+        qdist_temp = calc_dists(y, [partitions[0]], dist)[0]
+        qdists = [qdist_temp for p in partitions]
         qvals = []
         for d in qdists:
             num = 1. / (1. + d)

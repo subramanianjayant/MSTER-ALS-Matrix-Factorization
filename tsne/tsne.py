@@ -8,8 +8,8 @@ import copy
 
 ############# CONSTANTS ##############
 
-DATA_SIZE = 100
-ITERATIONS = 300
+DATA_SIZE = 300
+ITERATIONS = 600
 
 ######################################
 
@@ -68,14 +68,19 @@ def calc_p_vals(X, tol = 1e-5, perplexity = 30.0):
 
 if __name__ == '__main__':
 
-    desired_classes = [0,1,3,6,8]
+    desired_classes = [0,1,2]
     random_state = 1000
-    df = pd.read_csv('../mnist_784_zip/data/mnist_784_csv.csv')
+#     df = pd.read_csv('../mnist_784_zip/data/mnist_784_csv.csv')
+#     df = df.loc[df['class'].isin(desired_classes)]
+#     df = df.sample(n=DATA_SIZE, random_state=random_state)
+#     labels = np.array(df['class'])
+#     x_init = np.mat(df.drop('class', axis=1))
+    df = pd.DataFrame(np.load("./art_10_20_100_300ptx.npy"))
+    df['class'] = np.load('./art_10_20_100_300pty.npy')
     df = df.loc[df['class'].isin(desired_classes)]
     df = df.sample(n=DATA_SIZE, random_state=random_state)
     labels = np.array(df['class'])
     x_init = np.mat(df.drop('class', axis=1))
-
     np.random.seed(random_state)
 
     # desired_classes = [0,1,2,3,4]
@@ -170,5 +175,6 @@ if __name__ == '__main__':
         plt.scatter(y[:,0], y[:,1], alpha=0.2)
     plt.axis('equal')
     plt.show()
+    plt.savefig('tsne_result_art_100_300.png')
 
 #####################################################

@@ -5,9 +5,9 @@ from matplotlib import pyplot as plt
 import pandas as pd
 import numpy as np
 
-fname = 'tsne/htsne_data.npy'
+fname = 'cnn_postprocessed.csv.npy'
 hd_fname = 'tsne/htsne_data_hd.npy'
-label_fname = 'tsne/htsne_labels.npy'
+label_fname = 'cnn_labels.csv.npy'
 method = 'ward'
 
 for filename in [fname, hd_fname]:
@@ -19,4 +19,4 @@ for filename in [fname, hd_fname]:
     labels_ = np.load(label_fname)
     dn = hierarchy.dendrogram(Z, labels = labels_)
     plt.show()
-    #plt.savefig("dendrogram" + filename[5:] + ".png", dpi = 600)
+    plt.savefig("dendrogram" + filename[5:] + ".png", dpi = 600)
