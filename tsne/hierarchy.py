@@ -2,6 +2,9 @@ import numpy as np
 from sklearn import metrics
 import scipy
 import math
+from matplotlib import pyplot as plt
+from scipy.cluster import hierarchy
+from scipy.spatial import distance
 
 def merge(arr, delta, idxs, prev_D=[], cut_D=[]):
     idxs_ = idxs.copy()
@@ -80,13 +83,70 @@ def calc_dists(X, partitions, delta):
 def dist(x,y):
     return (len(x)*len(y))*np.linalg.norm(np.mean(y, axis=0)-np.mean(x, axis=0))**2/(len(x)+len(y))
 
+def weighted_nmi(original_X, new_X):
+    weights = get_dendrogram_weights(original_X)[::-1]
+    original_partitions, _ = calc_partitions(original_X, dist)
+    new_partitions, _ = calc_partitions(new_X, dist)
+
+    nmi = []
+    for p, pp in zip(original_partitions, new_partitions):
+        old_labels = []
+        new_labels = []
+        label_counter = 0
+        for g, gg in zip(p,pp):
+            old_labels.extend([label_counter]*len(g))
+            new_labels.extend([label_counter]*len(gg))
+            label_counter += 1
+        nmi.append(metrics.normalized_mutual_info_score(old_labels, new_labels))
+    return np.dot(np.array(nmi), np.array(weights))
+
+def fowlkes_mallows_indices(original_X, new_X):
+    weights = get_dendrogram_weights(original_X)[::-1]
+    original_partitions, _ = calc_partitions(original_X, dist)
+    new_partitions, _ = calc_partitions(new_X, dist)
+    n = len(original_partitions)
+
+    indices = {}
+    for p, pp in zip(original_partitions, new_partitions):
+        k = len(p)
+        old_labels = []
+        new_labels = []
+        label_counter = 0
+        for g, gg in zip(p,pp):
+            old_labels.extend([label_counter]*len(g))
+            new_labels.extend([label_counter]*len(gg))
+            label_counter += 1
+        indices[k] = np.sqrt(metrics.precision_score(old_labels, new_labels, average='micro')*metrics.recall_score(old_labels, new_labels, average='micro'))
+    plt.figure()
+    plt.plot(indices.keys(), indices.values())
+    plt.show()
+    return indices
+
+#takes in high-dimensional data, outputs lengths of branch segments
+#Outputs weights as % of total height, ordered from first cluster merge to last cluster merge
+def get_dendrogram_weights(x, method = 'ward'):
+    ytdist = distance.pdist(x, metric = 'euclidean')
+    Z = hierarchy.linkage(ytdist, method)
+    dn = hierarchy.dendrogram(Z)
+
+    icoord = scipy.array(dn['icoord'])
+    dcoord = scipy.array(dn['dcoord'])
+    x = sorted(list(zip(dn['dcoord'])), key = lambda x: x[0][1], reverse = True)
+#    print((x))
+    height = x[0][0][1]
+    weights = []
+    x.append(([0,0,0,0],))
+    while len(x) > 1:
+#        print(x[0])
+        weights.append(x[0][0][1] - x[1][0][1])
+        x.pop(0)
+#        print(len(x))
+    weights = weights / height
+    return weights
+
 if __name__ == '__main__':
     data = np.array([[3, 1], [4, 4], [4, 6], [2, 2], [2, 2]])
     parts,dists = calc_partitions(data, dist)
     for part in parts:
         print(part)
-    for distance in dists:
-        print(distance)
-    dist_arr = calc_dists(data, parts, dist)
-    for dist in dist_arr:
-        print(dist)
+    print(fowlkes_mallows_indices(data, data))

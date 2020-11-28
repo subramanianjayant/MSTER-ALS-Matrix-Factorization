@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from sklearn import datasets, decomposition, metrics
 from matplotlib import pyplot as plt
-from hierarchy import dist, merge, calc_partitions, calc_dists
+from hierarchy import dist, merge, calc_partitions, calc_dists, get_dendrogram_weights, weighted_nmi_score, fowlkes_mallows_indices
 import scipy
 from scipy.cluster import hierarchy
 from scipy.spatial import distance
@@ -64,28 +64,6 @@ def calc_p_vals(X, tol = 1e-5, perplexity = 30.0):
 
             P[p][i, np.concatenate((np.r_[0:i], np.r_[i+1:n]))] = Pf
     return P, partitions
-
-#takes in high-dimensional data, outputs lengths of branch segments
-#Outputs weights as % of total height, ordered from first cluster merge to last cluster merge
-def get_dendrogram_weights(x, method = 'ward'):
-    ytdist = distance.pdist(x, metric = 'euclidean')
-    Z = hierarchy.linkage(ytdist, method)
-    dn = hierarchy.dendrogram(Z)
-
-    icoord = scipy.array(dn['icoord'])
-    dcoord = scipy.array(dn['dcoord'])
-    x = sorted(list(zip(dn['dcoord'])), key = lambda x: x[0][1], reverse = True)
-#    print((x))
-    height = x[0][0][1]
-    weights = []
-    x.append(([0,0,0,0],))
-    while len(x) > 1:
-#        print(x[0])
-        weights.append(x[0][0][1] - x[1][0][1])
-        x.pop(0)
-#        print(len(x))
-    weights = weights / height
-    return weights
 
 ######################################################
 
