@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from sklearn import datasets, decomposition, metrics
 from matplotlib import pyplot as plt
-from hierarchy import dist, merge, calc_partitions, calc_dists, get_dendrogram_weights, weighted_nmi_score, fowlkes_mallows_indices
+from hierarchy import dist, merge, calc_partitions, calc_dists, get_dendrogram_weights, weighted_ari_score, fowlkes_mallows_indices, morlini_zani_index
 import scipy
 from scipy.cluster import hierarchy
 from scipy.spatial import distance
@@ -207,5 +207,11 @@ if __name__ == '__main__':
     plt.axis('equal')
     plt.savefig('1000_700.png')
     plt.show()
+
+    ########## METRICS #############
+    print("Weighted Adjusted Rand Index: {}".format(weighted_ari_score(x_init, y)))
+    print("Morlini-Zani Index: {}".format(morlini_zani_index(x_init, y)))
+
+    ixds = fowlkes_mallows_indices(x_init, y)
 
 #####################################################

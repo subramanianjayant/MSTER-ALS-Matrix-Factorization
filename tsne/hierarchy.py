@@ -5,6 +5,8 @@ import math
 from matplotlib import pyplot as plt
 from scipy.cluster import hierarchy
 from scipy.spatial import distance
+from scipy.special import comb
+import itertools
 
 def merge(arr, delta, idxs, prev_D=[], cut_D=[]):
     idxs_ = idxs.copy()
@@ -83,12 +85,12 @@ def calc_dists(X, partitions, delta):
 def dist(x,y):
     return (len(x)*len(y))*np.linalg.norm(np.mean(y, axis=0)-np.mean(x, axis=0))**2/(len(x)+len(y))
 
-def weighted_nmi(original_X, new_X):
+def weighted_ari(original_X, new_X):
     weights = get_dendrogram_weights(original_X)[::-1]
     original_partitions, _ = calc_partitions(original_X, dist)
     new_partitions, _ = calc_partitions(new_X, dist)
 
-    nmi = []
+    ari = []
     for p, pp in zip(original_partitions, new_partitions):
         old_labels = []
         new_labels = []
@@ -97,26 +99,27 @@ def weighted_nmi(original_X, new_X):
             old_labels.extend([label_counter]*len(g))
             new_labels.extend([label_counter]*len(gg))
             label_counter += 1
-        nmi.append(metrics.normalized_mutual_info_score(old_labels, new_labels))
-    return np.dot(np.array(nmi), np.array(weights))
+        ari.append(metrics.adjusted_rand_score(old_labels, new_labels))
+    return np.dot(np.array(ari), np.array(weights))
 
-def fowlkes_mallows_indices(original_X, new_X):
+def fowlkes_mallows_indices(original_X, new_X): #close to 1 is better
     weights = get_dendrogram_weights(original_X)[::-1]
     original_partitions, _ = calc_partitions(original_X, dist)
     new_partitions, _ = calc_partitions(new_X, dist)
-    n = len(original_partitions)
+    n = len(original_X)
 
     indices = {}
     for p, pp in zip(original_partitions, new_partitions):
         k = len(p)
-        old_labels = []
-        new_labels = []
-        label_counter = 0
-        for g, gg in zip(p,pp):
-            old_labels.extend([label_counter]*len(g))
-            new_labels.extend([label_counter]*len(gg))
-            label_counter += 1
-        indices[k] = np.sqrt(metrics.precision_score(old_labels, new_labels, average='micro')*metrics.recall_score(old_labels, new_labels, average='micro'))
+        if k<n:
+            old_labels = []
+            new_labels = []
+            label_counter = 0
+            for g, gg in zip(p,pp):
+                old_labels.extend([label_counter]*len(g))
+                new_labels.extend([label_counter]*len(gg))
+                label_counter += 1
+            indices[k] = np.sqrt(metrics.precision_score(old_labels, new_labels, average='micro')*metrics.recall_score(old_labels, new_labels, average='micro'))
     plt.figure()
     plt.plot(indices.keys(), indices.values())
     plt.show()
@@ -144,9 +147,36 @@ def get_dendrogram_weights(x, method = 'ward'):
     weights = weights / height
     return weights
 
+def morlini_zani_index(original_X, new_X): #close to 0 is better
+    weights = get_dendrogram_weights(original_X)[::-1]
+    original_partitions, _ = calc_partitions(original_X, dist)
+    new_partitions, _ = calc_partitions(new_X, dist)
+    n = len(original_X)
+
+    nums = []
+    denoms = []
+    for p, pp in zip(original_partitions, new_partitions):
+        k = len(p)
+        if k<n:
+            x1 = np.zeros((n,n))
+            x2 = np.zeros((n,n))
+            for cluster in p:
+                items = list(itertools.permutations(cluster, 2))
+                for item in items:
+                    x1[item] = 1
+            for cluster in pp:
+                items = list(itertools.permutations(cluster, 2))
+                for item in items:
+                    x2[item] = 1
+            nums.append(np.sum(np.abs(x2-x1)))
+            denoms.append(np.sum(x2)+np.sum(x1))
+    return sum(nums)/sum(denoms)
+
+
 if __name__ == '__main__':
     data = np.array([[3, 1], [4, 4], [4, 6], [2, 2], [2, 2]])
     parts,dists = calc_partitions(data, dist)
     for part in parts:
         print(part)
+    print(morlini_zani_index(data, data))
     print(fowlkes_mallows_indices(data, data))
