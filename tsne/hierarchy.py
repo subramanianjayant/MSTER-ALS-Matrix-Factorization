@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 from scipy.cluster import hierarchy
 from scipy.spatial import distance
 from scipy.special import comb
+from scipy import optimize
 import itertools
 
 def merge(arr, delta, idxs, prev_D=[], cut_D=[]):
@@ -172,6 +173,19 @@ def morlini_zani_index(original_X, new_X): #close to 0 is better
             denoms.append(np.sum(x2)+np.sum(x1))
     return sum(nums)/sum(denoms)
 
+
+def dend_norm(alpha, args):
+    return np.linalg.norm(args[0]-alpha*args[1])**2
+
+def norm_metric(data, linkage_method='ward'):
+    dist = distance.pdist(data, metric = 'euclidean')
+    return hierarchy.linkage(dist, linkage_method)[:,2]
+
+def dendrogram_norm(data_true, data_pred, exp = 2, linkage_method = 'ward'):
+    Ztrue = norm_metric(data_true)
+    Zpred = norm_metric(data_pred)
+    res = optimize.minimize(dend_norm, x0 = 3, args = (Ztrue, Zpred))
+    return res.fun
 
 if __name__ == '__main__':
     data = np.array([[3, 1], [4, 4], [4, 6], [2, 2], [2, 2]])
