@@ -160,8 +160,8 @@ def morlini_zani_index(original_X, new_X): #close to 0 is better
     return sum(nums)/sum(denoms)
 
 
-def dend_norm(alpha, args):
-    return np.linalg.norm(args[0]-alpha*args[1])**2
+def dend_norm(alpha, Ztrue, Zpred):
+    return np.linalg.norm(Ztrue-alpha*Zpred)**2
 
 def norm_metric(data, linkage_method='ward'):
     dist = distance.pdist(data, metric = 'euclidean')
