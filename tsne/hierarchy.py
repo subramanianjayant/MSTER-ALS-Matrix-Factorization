@@ -8,6 +8,8 @@ from scipy.spatial import distance
 from scipy.special import comb
 import itertools
 
+from dendrogram_weights import get_dendrogram_weights
+
 def merge(arr, delta, idxs, prev_D=[], cut_D=[]):
     idxs_ = idxs.copy()
     if len(cut_D) == 0:
@@ -120,32 +122,16 @@ def fowlkes_mallows_indices(original_X, new_X): #close to 1 is better
                 new_labels.extend([label_counter]*len(gg))
                 label_counter += 1
             indices[k] = np.sqrt(metrics.precision_score(old_labels, new_labels, average='micro')*metrics.recall_score(old_labels, new_labels, average='micro'))
+    
     plt.figure()
-    plt.plot(indices.keys(), indices.values())
+    plt.title("fowlkes_mallows_indices")
+    plt.plot(list(indices.keys()), list(indices.values()))
     plt.show()
     return indices
 
 #takes in high-dimensional data, outputs lengths of branch segments
 #Outputs weights as % of total height, ordered from first cluster merge to last cluster merge
-def get_dendrogram_weights(x, method = 'ward'):
-    ytdist = distance.pdist(x, metric = 'euclidean')
-    Z = hierarchy.linkage(ytdist, method)
-    dn = hierarchy.dendrogram(Z)
 
-    icoord = scipy.array(dn['icoord'])
-    dcoord = scipy.array(dn['dcoord'])
-    x = sorted(list(zip(dn['dcoord'])), key = lambda x: x[0][1], reverse = True)
-#    print((x))
-    height = x[0][0][1]
-    weights = []
-    x.append(([0,0,0,0],))
-    while len(x) > 1:
-#        print(x[0])
-        weights.append(x[0][0][1] - x[1][0][1])
-        x.pop(0)
-#        print(len(x))
-    weights = weights / height
-    return weights
 
 def morlini_zani_index(original_X, new_X): #close to 0 is better
     weights = get_dendrogram_weights(original_X)[::-1]

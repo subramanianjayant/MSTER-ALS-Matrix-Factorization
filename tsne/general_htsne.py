@@ -3,86 +3,65 @@ import numpy as np
 import pandas as pd
 from sklearn import datasets, decomposition, metrics
 from matplotlib import pyplot as plt
-from hierarchy import dist, merge, calc_partitions, calc_dists, get_dendrogram_weights, weighted_ari, fowlkes_mallows_indices, morlini_zani_index
+from hierarchy import dist, merge, calc_partitions, calc_dists, weighted_ari, fowlkes_mallows_indices, morlini_zani_index
 import scipy
 from scipy.cluster import hierarchy
 from scipy.spatial import distance
 import copy
 import pickle
-############# CONSTANTS ##############
-
-DATA_SIZE = 1000
-ITERATIONS = 1000
-
-######################################
+from dendrogram_weights import get_dendrogram_weights
 
 
-############## METHODS ###############
 
-def perplex_helper(Di, sigma):
-    Pi = np.exp(-1*Di.copy() * sigma)
-    Psum = np.sum(Pi)
-    perp_calc = np.log(Psum) + sigma * np.sum(Di * Pi) / Psum
-    Pf = Pi/Psum
-    return Pf, perp_calc
+def g_htsne(x_init, labels, iterations=500, random_state=1000, save_name = None):
+    DATA_SIZE = len(x_init)
+    desired_classes = np.unique(labels)
+    
+    def perplex_helper(Di, sigma):
+        Pi = np.exp(-1*Di.copy() * sigma)
+        Psum = np.sum(Pi)
+        perp_calc = np.log(Psum) + sigma * np.sum(Di * Pi) / Psum
+        Pf = Pi/Psum
+        return Pf, perp_calc
 
+    def calc_p_vals(X, tol = 1e-5, perplexity = 30.0):
+        (n, d) = X.shape
 
-def calc_p_vals(X, tol = 1e-5, perplexity = 30.0):
-    (n, d) = X.shape
+        partitions, pdist = calc_partitions(X, dist)
+        P = [np.zeros((n, n)) for p in partitions]
+        sigmas = [np.ones((n,1)) for p in partitions]
 
-    partitions, pdist = calc_partitions(X, dist)
-    P = [np.zeros((n, n)) for p in partitions]
-    sigmas = [np.ones((n,1)) for p in partitions]
-
-    for p in range(len(partitions)):
-        for i in range(n):
-            scaled_perplexity = perplexity*math.sqrt((n/DATA_SIZE)) #Adjust perplexity based on partiton data size
-            pdists = pdist[p]
-            Di = pdists[i, np.concatenate((np.r_[0:i], np.r_[i+1:n]))]
-            Pf, perp_calc = perplex_helper(Di, sigmas[p][i])
-            #perplexity calculation - binary search for best param
-            min_ = -np.inf
-            max_ = np.inf
-            count = 0
-            diff = perp_calc - np.log(scaled_perplexity)
-            while diff > tol and count < 50:
-                if diff > 0:
-                    min_ = sigmas[p][i].copy()
-                    if max_ == np.inf or max_ == -np.inf:
-                        sigmas[p][i] = sigmas[p][i] * 2.
-                    else:
-                        sigmas[p][i] = (sigmas[p][i] + max_) / 2.
-                else:
-                    max_ = sigmas[p][i].copy()
-                    if min_ == np.inf or min_ == -np.inf:
-                        sigmas[p][i] = sigmas[p][i] / 2.
-                    else:
-                        sigmas[p][i] = (sigmas[p][i] + min_) / 2.
-                count+=1
+        for p in range(len(partitions)):
+            for i in range(n):
+                scaled_perplexity = perplexity*math.sqrt((n/DATA_SIZE)) #Adjust perplexity based on partiton data size
+                pdists = pdist[p]
+                Di = pdists[i, np.concatenate((np.r_[0:i], np.r_[i+1:n]))]
                 Pf, perp_calc = perplex_helper(Di, sigmas[p][i])
+                #perplexity calculation - binary search for best param
+                min_ = -np.inf
+                max_ = np.inf
+                count = 0
                 diff = perp_calc - np.log(scaled_perplexity)
+                while diff > tol and count < 50:
+                    if diff > 0:
+                        min_ = sigmas[p][i].copy()
+                        if max_ == np.inf or max_ == -np.inf:
+                            sigmas[p][i] = sigmas[p][i] * 2.
+                        else:
+                            sigmas[p][i] = (sigmas[p][i] + max_) / 2.
+                    else:
+                        max_ = sigmas[p][i].copy()
+                        if min_ == np.inf or min_ == -np.inf:
+                            sigmas[p][i] = sigmas[p][i] / 2.
+                        else:
+                            sigmas[p][i] = (sigmas[p][i] + min_) / 2.
+                    count+=1
+                    Pf, perp_calc = perplex_helper(Di, sigmas[p][i])
+                    diff = perp_calc - np.log(scaled_perplexity)
 
-            P[p][i, np.concatenate((np.r_[0:i], np.r_[i+1:n]))] = Pf
-    return P, partitions
-
-######################################################
-
-###################### MAIN #########################
-
-if __name__ == '__main__':
-
-    desired_classes = [0,1,3,6]
-    random_state = 1000
-    df = pd.read_csv('../mnist_784_zip/data/mnist_784_csv.csv')
-    df = df.loc[df['class'].isin(desired_classes)]
-    df = df.sample(n=DATA_SIZE, random_state=random_state)
-    labels = np.array(df['class'])
-    x_init = np.mat(df.drop('class', axis=1))
-
+                P[p][i, np.concatenate((np.r_[0:i], np.r_[i+1:n]))] = Pf
+        return P, partitions
     np.random.seed(random_state)
-
-    #desired_classes = [0,1,2,3,4]
-    #x_init, labels = datasets.make_blobs(n_samples=DATA_SIZE,n_features=100, centers=5, cluster_std = 1)
     y = np.random.rand(DATA_SIZE, 2)
 
     #PCA and normalize into ball of radius 1
@@ -101,16 +80,15 @@ if __name__ == '__main__':
         pvals[idx] = np.maximum(pvals[idx], 1e-12)
 
     print("dumping pvals and partitions")
-
-    with open('pvals1000', 'wb') as f:
-        pickle.dump(pvals, f)
-    with open('partition1000', 'wb') as f:
-        pickle.dump(partitions, f)
-    #gradient descent params
- #   weights = [1]+[1/len(partitions) for x in range(len(partitions)-1)]
     weights = get_dendrogram_weights(x)[::-1]
-    with open('weights1000', 'wb') as f:
-        pickle.dump(weights, f)
+
+    if(save_name is not None):
+        with open(save_name + '_pvals', 'wb') as f:
+            pickle.dump(pvals, f)
+        with open(save_name + '_partition', 'wb') as f:
+            pickle.dump(partitions, f)
+        with open(save_name + '_weights', 'wb') as f:
+            pickle.dump(weights, f)
 
     dys = [np.zeros((n,2)) for x in range(len(partitions))]
     lr = 50
@@ -125,7 +103,7 @@ if __name__ == '__main__':
 
     print('Preprocessing done...\n\n')
 
-    for iter in range(ITERATIONS):
+    for iter in range(iterations):
 
         #compute qvals for each partition
         qdist_temp = calc_dists(y, [partitions[0]], dist)[0]
@@ -186,12 +164,15 @@ if __name__ == '__main__':
         #     plt.savefig('diagram/iter'+str(iter))
 
     print("saving result")
-    try:
-        np.save('htsne_data1000', y)
-        np.save('htsne_labels1000', labels)
-        np.save('htsne_data_hd1000', x_init)
+    ari = weighted_ari(x_init, y)
+    morlini = morlini_zani_index(x_init, y)
 
-        plt.figure()
+    plt.figure()
+    try:
+        if(save_name is not None):
+            np.save(save_name + '_htsne_data', y)
+            np.save(save_name + '_htsne_labels', labels)
+            np.save(save_name + 'htsne_data_hd', x_init)
         base = {}
         for class_ in desired_classes:
             base[class_] = []
@@ -204,14 +185,27 @@ if __name__ == '__main__':
     except Exception as e:
         print(e)
         plt.scatter(y[:,0], y[:,1], alpha=0.2)
+    print("Weighted Adjusted Rand Index: {}".format(ari))
+    print("Morlini-Zani Index: {}".format(morlini))
     plt.axis('equal')
-    plt.savefig('1000_700.png')
+
+    plt.figtext(.1, .8, "weighted ARI = {}".format(ari))
+    plt.figtext(.1, .6, "Morlini-Zani = {}".format(morlini))
+    if (save_name is not None):
+        plt.savefig(save_name + '_htsne.png')
     plt.show()
 
+
     ########## METRICS #############
-    print("Weighted Adjusted Rand Index: {}".format(weighted_ari_score(x_init, y)))
-    print("Morlini-Zani Index: {}".format(morlini_zani_index(x_init, y)))
+
 
     ixds = fowlkes_mallows_indices(x_init, y)
+    plt.figure()
+    plt.title("fowlkes_mallows_indices")
+    plt.plot(list(ixds.keys()), list(ixds.values()))
+    if (save_name is not None):
+        plt.savefig(save_name + '_fm_idx_htsne.png')
+    plt.show()
+    return y
 
 #####################################################
