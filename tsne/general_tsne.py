@@ -7,7 +7,7 @@ from hierarchy import dist, merge, calc_partitions, calc_dists, weighted_ari, mo
 import copy
 
 
-def g_tsne(x_init, labels, iterations=500, random_state=1000, save_name = None):
+def g_tsne(x_init, labels, iterations=500, random_state=1000, save_name = None, metrics = False):
     
     def perplex_helper(Di, sigma):
         Pi = np.exp(-1*Di.copy() * sigma)
@@ -129,9 +129,9 @@ def g_tsne(x_init, labels, iterations=500, random_state=1000, save_name = None):
         if iter == 100:
             pvals = pvals/4
     desired_classes = np.unique(labels)
-    
-    ari = weighted_ari(x_init, y)
-    morlini = morlini_zani_index(x_init, y)
+    if(metrics):
+        ari = weighted_ari(x_init, y)
+        morlini = morlini_zani_index(x_init, y)
 
     try:
         if(save_name is not None):
@@ -151,23 +151,26 @@ def g_tsne(x_init, labels, iterations=500, random_state=1000, save_name = None):
         print(e)
         plt.scatter(y[:,0], y[:,1], alpha=0.2)
         
-    print("Weighted Adjusted Rand Index: {}".format(ari))
-    print("Morlini-Zani Index: {}".format(morlini))
+    if(metrics):
+        
+        print("Weighted Adjusted Rand Index: {}".format(ari))
+        print("Morlini-Zani Index: {}".format(morlini))
 
-    plt.figtext(.1, .8, "weighted ARI = {}".format(ari))
-    plt.figtext(.1, .6, "Morlini-Zani = {}".format(morlini))
+        plt.figtext(.1, .8, "weighted ARI = {}".format(ari))
+        plt.figtext(.1, .6, "Morlini-Zani = {}".format(morlini))
     plt.axis('equal')
     if(save_name is not None):
         plt.savefig(save_name + '.png')
     plt.show()
     
-    ixds = fowlkes_mallows_indices(x_init, y)
-    plt.figure()
-    plt.title("fowlkes_mallows_indices tsne")
-    plt.plot(list(ixds.keys()), list(ixds.values()))
-    if (save_name is not None):
-        plt.savefig(save_name + '_fm_idx_tsne.png')
-    plt.show()
+    if(metrics):
+        ixds = fowlkes_mallows_indices(x_init, y)
+        plt.figure()
+        plt.title("fowlkes_mallows_indices tsne")
+        plt.plot(list(ixds.keys()), list(ixds.values()))
+        if (save_name is not None):
+            plt.savefig(save_name + '_fm_idx_tsne.png')
+        plt.show()
     return y
 
 #####################################################

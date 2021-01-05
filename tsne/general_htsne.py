@@ -13,7 +13,7 @@ from dendrogram_weights import get_dendrogram_weights
 
 
 
-def g_htsne(x_init, labels, iterations=500, random_state=1000, save_name = None):
+def g_htsne(x_init, labels, iterations=500, random_state=1000, save_name = None, gamma=None, save_intermediate_state=False, tsne_weight_doubling=False):
     DATA_SIZE = len(x_init)
     desired_classes = np.unique(labels)
     
@@ -81,7 +81,10 @@ def g_htsne(x_init, labels, iterations=500, random_state=1000, save_name = None)
 
     print("dumping pvals and partitions")
     weights = get_dendrogram_weights(x)[::-1]
-
+    if (tsne_weight_doubling):
+        weights[0] += 1
+    if gamma is not None:
+        weights = weights * gamma
     if(save_name is not None):
         with open(save_name + '_pvals', 'wb') as f:
             pickle.dump(pvals, f)

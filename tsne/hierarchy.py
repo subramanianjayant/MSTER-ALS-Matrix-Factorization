@@ -171,6 +171,7 @@ def dendrogram_norm(data_true, data_pred, exp = 2, linkage_method = 'ward'):
     Ztrue = norm_metric(data_true)
     Zpred = norm_metric(data_pred)
     res = optimize.minimize(dend_norm, x0 = 3, args = (Ztrue, Zpred))
+    print(res)
     return res.fun
 
 if __name__ == '__main__':
